@@ -32,7 +32,7 @@ export default function HealthPage() {
             <p>{data.message}</p>
 
             <p>
-                Status: {data.success ? "Backend Connected ✅" : "Backend Error ❌"}
+                Status: {data.success ? "Backend is Connected ✅" : "Backend Error ❌"}
             </p>
         </main>
     );
