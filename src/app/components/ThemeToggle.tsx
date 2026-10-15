@@ -51,7 +51,7 @@ export default function ThemeToggle() {
                     ? "Switch to dark theme"
                     : "Switch to light theme"
             }
-            className="theme-toggle"
+            className="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-xs font-semibold text-[var(--card-foreground)] transition-colors hover:bg-[var(--muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] disabled:cursor-wait disabled:opacity-70 sm:text-sm"
         >
             {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
         </button>
