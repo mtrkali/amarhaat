@@ -8,8 +8,8 @@
   color-scheme: light;
 
   /* Brand colors */
-  --primary: #5b7c99;
-  --primary-hover: #496982;
+  --primary: #15803d;
+  --primary-hover: #166534;
   --primary-foreground: #ffffff;
 
   /* Page colors */
@@ -27,7 +27,7 @@
   --input-background: #ffffff;
 
   /* Interaction colors */
-  --focus-ring: #5b7c99;
+  --focus-ring: #15803d;
 
   /* Status colors */
   --success: #166534;
@@ -42,8 +42,8 @@
   color-scheme: dark;
 
   /* Brand colors */
-  --primary: #8eacc7;
-  --primary-hover: #a8c0d6;
+  --primary: #4ade80;
+  --primary-hover: #86efac;
   --primary-foreground: #142536;
 
   /* Page colors */
@@ -61,7 +61,7 @@
   --input-background: #1e293b;
 
   /* Interaction colors */
-  --focus-ring: #8eacc7;
+  --focus-ring: #4ade80;
 
   /* Status colors */
   --success: #86efac;
