@@ -1,26 +1,171 @@
 @import "tailwindcss";
 
+/* ========================================
+   Amar Haat - Central Color System
+   ======================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Brand colors */
+  --primary: #5b7c99;
+  --primary-hover: #496982;
+  --primary-foreground: #ffffff;
+
+  /* Page colors */
+  --background: #f8fafc;
+  --foreground: #1e293b;
+
+  /* Component colors */
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+
+  --border: #cbd5e1;
+  --input-background: #ffffff;
+
+  /* Interaction colors */
+  --focus-ring: #5b7c99;
+
+  /* Status colors */
+  --success: #166534;
+  --error: #b91c1c;
 }
+
+/* ========================================
+   Dark Theme
+   ======================================== */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Brand colors */
+  --primary: #8eacc7;
+  --primary-hover: #a8c0d6;
+  --primary-foreground: #142536;
+
+  /* Page colors */
+  --background: #111827;
+  --foreground: #f1f5f9;
+
+  /* Component colors */
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+
+  --muted: #273548;
+  --muted-foreground: #cbd5e1;
+
+  --border: #475569;
+  --input-background: #1e293b;
+
+  /* Interaction colors */
+  --focus-ring: #8eacc7;
+
+  /* Status colors */
+  --success: #86efac;
+  --error: #fca5a5;
+}
+
+/* ========================================
+   Tailwind CSS Theme Integration
+   ======================================== */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ========================================
+   Base Styles
+   ======================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  margin: 0;
+
+  background-color: var(--background);
   color: var(--foreground);
+
   font-family: Arial, Helvetica, sans-serif;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* ========================================
+   Theme Toggle Button
+   ======================================== */
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+  padding: 10px 14px;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  background-color: var(--card);
+  color: var(--card-foreground);
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.theme-toggle:hover:not(:disabled) {
+  border-color: var(--primary);
+  background-color: var(--muted);
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.theme-toggle:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
