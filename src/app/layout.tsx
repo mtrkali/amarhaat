@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
-import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +62,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
         <Header cartCount={CART_COUNT} />
         {children}
+        <Footer />
         <BottomNav cartCount={CART_COUNT} />
       </body>
     </html>

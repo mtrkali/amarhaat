@@ -1,5 +1,5 @@
 // Temporary mock data for the homepage.
-// TODO: replace with real API calls once products and categories exist in the backend.
+// TODO: replace with real API calls once the backend has these resources.
 // To use a real image, set the `image` field (a path under /public).
 
 export type Category = {
@@ -20,6 +20,29 @@ export type Product = {
     emoji: string;
     image?: string;
     href: string;
+};
+
+export type Seller = {
+    id: string;
+    name: string;
+    category: string;
+    emoji: string;
+    image?: string;
+    href: string;
+};
+
+export type Testimonial = {
+    id: string;
+    name: string;
+    area: string;
+    rating: number;
+    quote: string;
+};
+
+export type Faq = {
+    id: string;
+    question: string;
+    answer: string;
 };
 
 export const categories: Category[] = [
@@ -78,5 +101,61 @@ export const products: Product[] = [
         reviewCount: 88,
         emoji: "🥚",
         href: "/products/eggs",
+    },
+];
+
+export const sellers: Seller[] = [
+    { id: "aliza-farm", name: "আলিজা ফার্ম", category: "কৃষি পণ্য", emoji: "🧑‍🌾", href: "/sellers/aliza-farm" },
+    { id: "suhana-boutique", name: "সুহানা বুটিক", category: "পোশাক", emoji: "👗", href: "/sellers/suhana-boutique" },
+    { id: "rahim-store", name: "রহিম স্টোর", category: "গৃহস্থালি পণ্য", emoji: "🏪", href: "/sellers/rahim-store" },
+    { id: "mehedi-food", name: "মেহেদী ফুড", category: "খাদ্য পণ্য", emoji: "🍱", href: "/sellers/mehedi-food" },
+];
+
+// Sample reviews for the design. Replace with real customer reviews before launch.
+export const testimonials: Testimonial[] = [
+    {
+        id: "rahima",
+        name: "রহিমা আক্তার",
+        area: "ফেনী",
+        rating: 5,
+        quote: "Amar Haat থেকে প্রথমবার অর্ডার করলাম, পণ্য অনেক ভালো ছিল। ডেলিভারিও দ্রুত পেয়েছি।",
+    },
+    {
+        id: "sample-2",
+        name: "নমুনা গ্রাহক ২",
+        area: "ফেনী",
+        rating: 5,
+        quote: "এখানে নমুনা মতামত থাকবে। আসল গ্রাহকের মতামত পেলে বদলে দিন।",
+    },
+    {
+        id: "sample-3",
+        name: "নমুনা গ্রাহক ৩",
+        area: "ফেনী",
+        rating: 4,
+        quote: "এখানে নমুনা মতামত থাকবে। আসল গ্রাহকের মতামত পেলে বদলে দিন।",
+    },
+];
+
+// TODO: the owner of Amar Haat should confirm these answers match the real policies.
+export const faqs: Faq[] = [
+    {
+        id: "how-to-order",
+        question: "কিভাবে অর্ডার করবো?",
+        answer: "পছন্দের পণ্য কার্টে যোগ করুন, ডেলিভারির ঠিকানা দিন এবং অর্ডার নিশ্চিত করুন। লগইন ছাড়াও অতিথি হিসেবে অর্ডার করা যাবে।",
+    },
+    {
+        id: "delivery-time",
+        question: "ডেলিভারি কতদিনে হবে?",
+        answer: "ফেনী এরিয়ায় দ্রুত ডেলিভারি দেওয়া হয়। পণ্য ও এলাকা অনুযায়ী সময় আলাদা হতে পারে।",
+    },
+    {
+        id: "payment",
+        question: "পেমেন্ট পদ্ধতি কি কি?",
+        answer: "ক্যাশ অন ডেলিভারি (COD) সুবিধা আছে, অর্থাৎ পণ্য হাতে পেয়ে টাকা দিতে পারবেন।",
+    },
+    {
+        id: "return",
+        question: "রিটার্ন বা এক্সচেঞ্জ করা যাবে?",
+        answer: "রিটার্ন ও এক্সচেঞ্জের নিয়ম পণ্যভেদে আলাদা। বিস্তারিত জানতে রিটার্ন নীতি দেখুন।",
     },
 ];

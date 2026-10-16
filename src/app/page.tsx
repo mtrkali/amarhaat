@@ -1,8 +1,15 @@
 import CategoryGrid from "./components/CategoryGrid";
+import FaqSection from "./components/FaqSection";
+import FeaturedSellers from "./components/FeaturedSellers";
 import HeroBanner from "./components/HeroBanner";
+import JoinUsBanner from "./components/JoinUsBanner";
 import OfferBanner from "./components/OfferBanner";
 import PopularProducts from "./components/PopularProducts";
+import SellerCta from "./components/SellerCta";
+import StartShoppingCta from "./components/StartShoppingCta";
+import Testimonials from "./components/Testimonials";
 import TrustBadges from "./components/TrustBadges";
+import WhyAmarHaat from "./components/WhyAmarHaat";
 
 export default function Home() {
   return (
@@ -14,6 +21,13 @@ export default function Home() {
         <CategoryGrid />
         <OfferBanner />
         <PopularProducts />
+        <WhyAmarHaat />
+        <StartShoppingCta />
+        <FeaturedSellers />
+        <SellerCta />
+        <Testimonials />
+        <FaqSection />
+        <JoinUsBanner />
       </div>
     </main>
   );
