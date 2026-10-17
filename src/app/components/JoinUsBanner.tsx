@@ -17,6 +17,7 @@ export default function JoinUsBanner({ image }: JoinUsBannerProps) {
                             src={image}
                             alt=""
                             fill
+                            loading="eager"
                             sizes="(max-width: 1280px) 100vw, 1280px"
                             className="-z-20 object-cover"
                         />

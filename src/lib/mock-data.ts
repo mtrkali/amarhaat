@@ -1,6 +1,6 @@
 // Temporary mock data for the homepage.
 // TODO: replace with real API calls once the backend has these resources.
-// To use a real image, set the `image` field (a path under /public).
+// Images live in /public/images. To use a real photo, replace the file with the same name.
 
 export type Category = {
     id: string;
@@ -46,13 +46,13 @@ export type Faq = {
 };
 
 export const categories: Category[] = [
-    { id: "vegetables-fruits", name: "সবজি ও ফল", emoji: "🥬", href: "/categories/vegetables-fruits" },
-    { id: "food", name: "খাদ্য পণ্য", emoji: "🌾", href: "/categories/food" },
-    { id: "clothing", name: "পোশাক", emoji: "👕", href: "/categories/clothing" },
-    { id: "electronics", name: "ইলেকট্রনিক্স", emoji: "📱", href: "/categories/electronics" },
-    { id: "household", name: "গৃহস্থালি পণ্য", emoji: "🧴", href: "/categories/household" },
-    { id: "beauty", name: "বিউটি ও কেয়ার", emoji: "💄", href: "/categories/beauty" },
-    { id: "agriculture", name: "কৃষি পণ্য", emoji: "🌱", href: "/categories/agriculture" },
+    { id: "vegetables-fruits", name: "সবজি ও ফল", emoji: "🥬", image: "/images/categories/vegetables-fruits.webp", href: "/categories/vegetables-fruits" },
+    { id: "food", name: "খাদ্য পণ্য", emoji: "🌾", image: "/images/categories/food.webp", href: "/categories/food" },
+    { id: "clothing", name: "পোশাক", emoji: "👕", image: "/images/categories/clothing.webp", href: "/categories/clothing" },
+    { id: "electronics", name: "ইলেকট্রনিক্স", emoji: "📱", image: "/images/categories/electronics.webp", href: "/categories/electronics" },
+    { id: "household", name: "গৃহস্থালি পণ্য", emoji: "🧴", image: "/images/categories/household.webp", href: "/categories/household" },
+    { id: "beauty", name: "বিউটি ও কেয়ার", emoji: "💄", image: "/images/categories/beauty.webp", href: "/categories/beauty" },
+    { id: "agriculture", name: "কৃষি পণ্য", emoji: "🌱", image: "/images/categories/agriculture.webp", href: "/categories/agriculture" },
 ];
 
 export const products: Product[] = [
@@ -64,6 +64,7 @@ export const products: Product[] = [
         rating: 4.8,
         reviewCount: 120,
         emoji: "🍅",
+        image: "/images/products/tomato.webp",
         href: "/products/tomato",
     },
     {
@@ -73,6 +74,7 @@ export const products: Product[] = [
         rating: 4.6,
         reviewCount: 98,
         emoji: "🌾",
+        image: "/images/products/basmati-rice.webp",
         href: "/products/basmati-rice",
     },
     {
@@ -82,6 +84,7 @@ export const products: Product[] = [
         rating: 4.7,
         reviewCount: 76,
         emoji: "👕",
+        image: "/images/products/cotton-shirt.webp",
         href: "/products/cotton-shirt",
     },
     {
@@ -91,6 +94,7 @@ export const products: Product[] = [
         rating: 4.5,
         reviewCount: 64,
         emoji: "🫒",
+        image: "/images/products/mustard-oil.webp",
         href: "/products/mustard-oil",
     },
     {
@@ -100,15 +104,16 @@ export const products: Product[] = [
         rating: 4.7,
         reviewCount: 88,
         emoji: "🥚",
+        image: "/images/products/eggs.webp",
         href: "/products/eggs",
     },
 ];
 
 export const sellers: Seller[] = [
-    { id: "aliza-farm", name: "আলিজা ফার্ম", category: "কৃষি পণ্য", emoji: "🧑‍🌾", href: "/sellers/aliza-farm" },
-    { id: "suhana-boutique", name: "সুহানা বুটিক", category: "পোশাক", emoji: "👗", href: "/sellers/suhana-boutique" },
-    { id: "rahim-store", name: "রহিম স্টোর", category: "গৃহস্থালি পণ্য", emoji: "🏪", href: "/sellers/rahim-store" },
-    { id: "mehedi-food", name: "মেহেদী ফুড", category: "খাদ্য পণ্য", emoji: "🍱", href: "/sellers/mehedi-food" },
+    { id: "aliza-farm", name: "আলিজা ফার্ম", category: "কৃষি পণ্য", emoji: "🧑‍🌾", image: "/images/sellers/aliza-farm.webp", href: "/sellers/aliza-farm" },
+    { id: "suhana-boutique", name: "সুহানা বুটিক", category: "পোশাক", emoji: "👗", image: "/images/sellers/suhana-boutique.webp", href: "/sellers/suhana-boutique" },
+    { id: "rahim-store", name: "রহিম স্টোর", category: "গৃহস্থালি পণ্য", emoji: "🏪", image: "/images/sellers/rahim-store.webp", href: "/sellers/rahim-store" },
+    { id: "mehedi-food", name: "মেহেদী ফুড", category: "খাদ্য পণ্য", emoji: "🍱", image: "/images/sellers/mehedi-food.webp", href: "/sellers/mehedi-food" },
 ];
 
 // Sample reviews for the design. Replace with real customer reviews before launch.

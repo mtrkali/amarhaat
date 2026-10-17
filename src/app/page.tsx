@@ -14,12 +14,12 @@ import WhyAmarHaat from "./components/WhyAmarHaat";
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 pb-10">
-      <HeroBanner />
+      <HeroBanner image="/images/hero.webp" />
       <TrustBadges />
 
       <div className="space-y-10 px-4 pt-8 sm:px-6 lg:px-8">
         <CategoryGrid />
-        <OfferBanner />
+        <OfferBanner image="/images/offer.webp" />
         <PopularProducts />
         <WhyAmarHaat />
         <StartShoppingCta />
@@ -27,14 +27,14 @@ export default function Home() {
         {/* On large screens these pairs sit side by side; on smaller screens they stack. */}
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-8">
           <FeaturedSellers />
-          <SellerCta />
+          <SellerCta image="/images/shop.webp" />
         </div>
 
         <Testimonials />
 
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-8">
           <FaqSection />
-          <JoinUsBanner />
+          <JoinUsBanner image="/images/feni-bridge.webp" />
         </div>
       </div>
     </main>
