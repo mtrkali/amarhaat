@@ -9,8 +9,8 @@ type JoinUsBannerProps = {
 
 export default function JoinUsBanner({ image }: JoinUsBannerProps) {
     return (
-        <section aria-labelledby="join-heading">
-            <div className="relative isolate overflow-hidden rounded-2xl bg-banner p-6 text-banner-foreground md:p-10">
+        <section aria-labelledby="join-heading" className="h-full">
+            <div className="relative isolate flex h-full flex-col justify-center overflow-hidden rounded-2xl bg-banner p-6 text-banner-foreground md:p-10">
                 {image && (
                     <>
                         <Image

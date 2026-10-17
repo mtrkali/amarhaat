@@ -9,8 +9,8 @@ type SellerCtaProps = {
 
 export default function SellerCta({ image }: SellerCtaProps) {
     return (
-        <section aria-labelledby="seller-cta-heading">
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-surface-green p-6 md:p-10">
+        <section aria-labelledby="seller-cta-heading" className="h-full">
+            <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-2xl border border-border bg-surface-green p-6 md:p-10">
                 <div className="relative z-10 max-w-[65%] md:max-w-md">
                     <h2
                         id="seller-cta-heading"

@@ -23,11 +23,19 @@ export default function Home() {
         <PopularProducts />
         <WhyAmarHaat />
         <StartShoppingCta />
-        <FeaturedSellers />
-        <SellerCta />
+
+        {/* On large screens these pairs sit side by side; on smaller screens they stack. */}
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-8">
+          <FeaturedSellers />
+          <SellerCta />
+        </div>
+
         <Testimonials />
-        <FaqSection />
-        <JoinUsBanner />
+
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-8">
+          <FaqSection />
+          <JoinUsBanner />
+        </div>
       </div>
     </main>
   );
