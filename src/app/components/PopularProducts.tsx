@@ -1,4 +1,4 @@
-import { products } from "../../lib/mock-data";
+import { popularProducts } from "../../lib/mock-data";
 import ProductCard from "./ProductCard";
 import SectionHeader from "./SectionHeader";
 
@@ -13,7 +13,7 @@ export default function PopularProducts() {
 
             {/* Phones and tablets: horizontal scroll. lg and up: a 5-column grid. */}
             <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
-                {products.map((product) => (
+                {popularProducts.map((product) => (
                     <li
                         key={product.id}
                         className="w-40 shrink-0 snap-start md:w-48 lg:w-auto"

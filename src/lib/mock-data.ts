@@ -1,6 +1,7 @@
-// Temporary mock data for the homepage.
+// Temporary mock data for the storefront.
 // TODO: replace with real API calls once the backend has these resources.
 // Images live in /public/images. To use a real photo, replace the file with the same name.
+// Products without an `image` show their emoji until a photo is added.
 
 export type Category = {
     id: string;
@@ -13,6 +14,7 @@ export type Category = {
 export type Product = {
     id: string;
     name: string;
+    categoryId: string;
     price: number;
     oldPrice?: number;
     rating: number;
@@ -55,10 +57,12 @@ export const categories: Category[] = [
     { id: "agriculture", name: "কৃষি পণ্য", emoji: "🌱", image: "/images/categories/agriculture.webp", href: "/categories/agriculture" },
 ];
 
+// Sample products (names, prices and ratings are made up for the design).
 export const products: Product[] = [
     {
         id: "tomato",
         name: "টমেটো (দেশি)",
+        categoryId: "vegetables-fruits",
         price: 80,
         oldPrice: 91,
         rating: 4.8,
@@ -70,6 +74,7 @@ export const products: Product[] = [
     {
         id: "basmati-rice",
         name: "বাসমতি চাল (৫ কেজি)",
+        categoryId: "food",
         price: 350,
         rating: 4.6,
         reviewCount: 98,
@@ -80,6 +85,7 @@ export const products: Product[] = [
     {
         id: "cotton-shirt",
         name: "কটন শার্ট (মেন)",
+        categoryId: "clothing",
         price: 550,
         rating: 4.7,
         reviewCount: 76,
@@ -90,6 +96,7 @@ export const products: Product[] = [
     {
         id: "mustard-oil",
         name: "সরিষার তেল (১ লিটার)",
+        categoryId: "food",
         price: 210,
         rating: 4.5,
         reviewCount: 64,
@@ -100,6 +107,7 @@ export const products: Product[] = [
     {
         id: "eggs",
         name: "দেশি ডিম (১২ পিস)",
+        categoryId: "food",
         price: 160,
         rating: 4.7,
         reviewCount: 88,
@@ -107,7 +115,121 @@ export const products: Product[] = [
         image: "/images/products/eggs.webp",
         href: "/products/eggs",
     },
+    {
+        id: "potato",
+        name: "আলু (দেশি, ১ কেজি)",
+        categoryId: "vegetables-fruits",
+        price: 45,
+        rating: 4.4,
+        reviewCount: 52,
+        emoji: "🥔",
+        href: "/products/potato",
+    },
+    {
+        id: "banana",
+        name: "সাগর কলা (১ ডজন)",
+        categoryId: "vegetables-fruits",
+        price: 90,
+        oldPrice: 100,
+        rating: 4.6,
+        reviewCount: 41,
+        emoji: "🍌",
+        href: "/products/banana",
+    },
+    {
+        id: "lentils",
+        name: "মসুর ডাল (১ কেজি)",
+        categoryId: "food",
+        price: 140,
+        rating: 4.5,
+        reviewCount: 73,
+        emoji: "🫘",
+        href: "/products/lentils",
+    },
+    {
+        id: "panjabi",
+        name: "কটন পাঞ্জাবি",
+        categoryId: "clothing",
+        price: 950,
+        oldPrice: 1100,
+        rating: 4.6,
+        reviewCount: 39,
+        emoji: "👘",
+        href: "/products/panjabi",
+    },
+    {
+        id: "earbuds",
+        name: "ওয়্যারলেস ইয়ারবাড",
+        categoryId: "electronics",
+        price: 990,
+        rating: 4.2,
+        reviewCount: 57,
+        emoji: "🎧",
+        href: "/products/earbuds",
+    },
+    {
+        id: "power-bank",
+        name: "পাওয়ার ব্যাংক (১০০০০ mAh)",
+        categoryId: "electronics",
+        price: 1250,
+        rating: 4.4,
+        reviewCount: 48,
+        emoji: "🔋",
+        href: "/products/power-bank",
+    },
+    {
+        id: "detergent",
+        name: "ডিটারজেন্ট পাউডার (১ কেজি)",
+        categoryId: "household",
+        price: 120,
+        rating: 4.3,
+        reviewCount: 66,
+        emoji: "🧴",
+        href: "/products/detergent",
+    },
+    {
+        id: "face-cream",
+        name: "ফেস ক্রিম (৫০ গ্রাম)",
+        categoryId: "beauty",
+        price: 180,
+        oldPrice: 200,
+        rating: 4.5,
+        reviewCount: 34,
+        emoji: "💄",
+        href: "/products/face-cream",
+    },
+    {
+        id: "vegetable-seeds",
+        name: "সবজির বীজ (প্যাকেট)",
+        categoryId: "agriculture",
+        price: 30,
+        rating: 4.7,
+        reviewCount: 29,
+        emoji: "🌱",
+        href: "/products/vegetable-seeds",
+    },
+    {
+        id: "organic-fertilizer",
+        name: "জৈব সার (৫ কেজি)",
+        categoryId: "agriculture",
+        price: 250,
+        rating: 4.6,
+        reviewCount: 31,
+        emoji: "🌿",
+        href: "/products/organic-fertilizer",
+    },
 ];
+
+// The homepage "popular products" row shows the first five.
+export const popularProducts: Product[] = products.slice(0, 5);
+
+export function getCategory(id: string): Category | undefined {
+    return categories.find((category) => category.id === id);
+}
+
+export function getProductsByCategory(categoryId: string): Product[] {
+    return products.filter((product) => product.categoryId === categoryId);
+}
 
 export const sellers: Seller[] = [
     { id: "aliza-farm", name: "আলিজা ফার্ম", category: "কৃষি পণ্য", emoji: "🧑‍🌾", image: "/images/sellers/aliza-farm.webp", href: "/sellers/aliza-farm" },
