@@ -40,7 +40,7 @@ const cartSlice = createSlice({
         //Immer lets us write "mutating" code here, it produces a new state safely.
         hydrateCart: (state, action: PayloadAction<CartItem[]>) => {
             state.items = action.payload;
-            state.hydrated = true;
+            state.hydrated = true
         },
 
         addToCart(
