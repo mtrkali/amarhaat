@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import type { Product } from "../../lib/mock-data";
+import QuickAddButton from "./QuickAddButton"
+
 
 type ProductCardProps = {
     product: Product;
@@ -73,14 +75,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     {rating.toFixed(1)} ({reviewCount})
                 </p>
 
-                {/* TODO: connect to the cart once cart state exists. */}
-                <button
-                    type="button"
-                    aria-label={`${name} কার্টে নিন`}
-                    className="mt-auto h-10 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
-                >
-                    কার্ট নিন
-                </button>
+                <QuickAddButton productId={product.id} productName={name} />
             </div>
         </article>
     );

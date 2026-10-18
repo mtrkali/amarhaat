@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomNav from "./components/BottomNav";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
+import StoreProvider from "./components/StoreProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,9 +44,6 @@ export const viewport: Viewport = {
 // Uses the same storage key and fallback logic as ThemeToggle.
 const themeInitScript = `(function(){try{var t=localStorage.getItem("amar-haat-theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){}})();`;
 
-// TODO: replace with real cart state once the cart exists.
-const CART_COUNT = 2;
-
 export default function RootLayout({
   children,
 }: LayoutProps<"/">) {
@@ -60,10 +58,12 @@ export default function RootLayout({
       </head>
       {/* Bottom padding keeps content clear of the fixed mobile nav (4rem + safe area). */}
       <body className="flex min-h-full flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
-        <Header cartCount={CART_COUNT} />
-        {children}
-        <Footer />
-        <BottomNav cartCount={CART_COUNT} />
+        <StoreProvider>
+          <Header />
+          {children}
+          <Footer />
+          <BottomNav />
+        </StoreProvider>
       </body>
     </html>
   );

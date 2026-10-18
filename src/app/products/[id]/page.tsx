@@ -150,6 +150,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     </div>
 
                     <AddToCart
+                        productId={product.id}
                         productName={product.name}
                         unitPrice={product.price}
                     />
@@ -174,17 +175,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
             </div>
 
-            {related.length > 0 && (
-                <section aria-labelledby="related-heading" className="mt-12">
-                    <SectionHeader
-                        id="related-heading"
-                        title="একই ক্যাটাগরির আরও পণ্য"
-                        href={category?.href}
-                    />
+            {
+                related.length > 0 && (
+                    <section aria-labelledby="related-heading" className="mt-12">
+                        <SectionHeader
+                            id="related-heading"
+                            title="একই ক্যাটাগরির আরও পণ্য"
+                            href={category?.href}
+                        />
 
-                    <ProductGrid products={related} />
-                </section>
-            )}
-        </main>
+                        <ProductGrid products={related} />
+                    </section>
+                )
+            }
+        </main >
     );
 }

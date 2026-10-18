@@ -9,8 +9,10 @@ import {
     ShoppingCart,
     User,
 } from "lucide-react";
+import { selectCartCount } from "../../lib/features/cartSlice";
+import { useAppSelector } from "../../lib/hooks";
 
-// TODO: only "/" exists today. The other pages are still to be built.
+// TODO: /orders and /profile are still to be built.
 const navItems = [
     { href: "/", label: "হোম", Icon: House },
     { href: "/categories", label: "ক্যাটাগরি", Icon: LayoutGrid },
@@ -19,12 +21,9 @@ const navItems = [
     { href: "/profile", label: "প্রোফাইল", Icon: User },
 ];
 
-type BottomNavProps = {
-    cartCount?: number;
-};
-
-export default function BottomNav({ cartCount = 0 }: BottomNavProps) {
+export default function BottomNav() {
     const pathname = usePathname();
+    const cartCount = useAppSelector(selectCartCount);
 
     function isActive(href: string) {
         return href === "/"
@@ -61,7 +60,7 @@ export default function BottomNav({ cartCount = 0 }: BottomNavProps) {
                                             aria-hidden="true"
                                             className="absolute -right-2 -top-1.5 flex min-w-4 items-center justify-center rounded-full bg-badge px-1 text-[10px] font-bold leading-4 text-badge-foreground"
                                         >
-                                            {cartCount}
+                                            {cartCount > 99 ? "99+" : cartCount}
                                         </span>
                                     )}
                                 </span>

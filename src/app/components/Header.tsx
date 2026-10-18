@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu, Search, ShoppingCart, X } from "lucide-react";
+import { selectCartCount } from "../../lib/features/cartSlice";
+import { useAppSelector } from "../../lib/hooks";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 
-// TODO: these pages don't exist yet. Add them as the app grows.
+// TODO: some of these pages don't exist yet. Add them as the app grows.
 const menuLinks = [
     { href: "/", label: "হোম" },
     { href: "/categories", label: "ক্যাটাগরি" },
@@ -16,12 +18,9 @@ const menuLinks = [
     { href: "/help", label: "সাহায্য ও FAQ" },
 ];
 
-type HeaderProps = {
-    cartCount?: number;
-};
-
-export default function Header({ cartCount = 0 }: HeaderProps) {
+export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const cartCount = useAppSelector(selectCartCount);
 
     // Close the menu with the Escape key.
     useEffect(() => {
@@ -99,7 +98,7 @@ export default function Header({ cartCount = 0 }: HeaderProps) {
                                 aria-hidden="true"
                                 className="absolute right-0.5 top-0.5 flex min-w-5 items-center justify-center rounded-full bg-badge px-1 text-[11px] font-bold leading-5 text-badge-foreground"
                             >
-                                {cartCount}
+                                {cartCount > 99 ? "99+" : cartCount}
                             </span>
                         )}
                     </Link>

@@ -26,7 +26,7 @@ export default function HeroBanner({ image }: HeroBannerProps) {
                     {/* Fades the photo into the theme colour so the text stays readable in light and dark. */}
                     <div
                         aria-hidden="true"
-                        className="absolute inset-0 -z-10 bg-gradient-to-r from-surface-green via-surface-green/35 to-transparent"
+                        className="absolute inset-0 -z-10 bg-gradient-to-r from-surface-green via-surface-green/45 to-transparent"
                     />
                 </>
             )}
