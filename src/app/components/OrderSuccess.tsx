@@ -136,12 +136,21 @@ export default function OrderSuccess() {
                 </p>
             </section>
 
-            <Link
-                href="/products"
-                className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
-            >
-                আরও কেনাকাটা করুন
-            </Link>
+            <div className="grid gap-3 sm:grid-cols-2">
+                <Link
+                    href="/orders"
+                    className="flex h-12 w-full items-center justify-center rounded-full border border-primary text-base font-semibold text-primary transition-colors hover:bg-surface-green"
+                >
+                    অর্ডারের অবস্থা দেখুন
+                </Link>
+
+                <Link
+                    href="/products"
+                    className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+                >
+                    আরও কেনাকাটা করুন
+                </Link>
+            </div>
         </div>
     );
 }

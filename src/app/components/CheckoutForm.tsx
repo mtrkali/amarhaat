@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ChevronDown, ShoppingBag } from "lucide-react";
 import {
+    DEPENDENT_FIELDS,
     FIELD_ORDER,
     UPAZILAS,
     emptyCheckoutValues,
@@ -16,21 +17,23 @@ import {
 } from "../../lib/checkout";
 import {
     clearCart,
-    selectAvailableCount,
     selectCartCount,
     selectCartHydrated,
     selectCartLines,
     selectCartSubtotal,
 } from "../../lib/features/cartSlice";
-import { loadCatalog } from "../../lib/features/catalogSlice";
+import {
+    getAreas,
+    getWardCount,
+    toBengaliDigits,
+} from "../../lib/feni-areas";
 import { useAppDispatch, useAppSelector } from "../../lib/hooks";
-import { saveLastOrder } from "../../lib/last-order";
 import { placeOrder } from "../../lib/orders";
 
 function controlClass(hasError: boolean) {
     return `w-full rounded-xl border bg-input px-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:ring-2 ${hasError
-        ? "border-error focus:border-error focus:ring-error/25"
-        : "border-border focus:border-focus-ring focus:ring-focus-ring/25"
+            ? "border-error focus:border-error focus:ring-error/25"
+            : "border-border focus:border-focus-ring focus:ring-focus-ring/25"
         }`;
 }
 
@@ -90,30 +93,101 @@ function describedBy(id: string, error?: string, hint?: string) {
     return undefined;
 }
 
+type SelectBoxProps = {
+    id: string;
+    name: string;
+    value: string;
+    onChange: (value: string) => void;
+    hasError: boolean;
+    disabled?: boolean;
+    required?: boolean;
+    describedBy?: string;
+    children: ReactNode;
+};
+
+// A styled drop-down list with its own arrow icon.
+function SelectBox({
+    id,
+    name,
+    value,
+    onChange,
+    hasError,
+    disabled,
+    required,
+    describedBy: describedById,
+    children,
+}: SelectBoxProps) {
+    return (
+        <div className="relative">
+            <select
+                id={id}
+                name={name}
+                value={value}
+                disabled={disabled}
+                aria-required={required ? "true" : undefined}
+                aria-invalid={hasError ? true : undefined}
+                aria-describedby={describedById}
+                onChange={(event) => onChange(event.target.value)}
+                className={`h-12 appearance-none pr-11 disabled:cursor-not-allowed disabled:opacity-60 ${controlClass(
+                    hasError,
+                )}`}
+            >
+                {children}
+            </select>
+
+            <ChevronDown
+                aria-hidden="true"
+                className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
+            />
+        </div>
+    );
+}
+
 export default function CheckoutForm() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const hydrated = useAppSelector(selectCartHydrated);
-    const allLines = useAppSelector(selectCartLines);
-    const savedCount = useAppSelector(selectCartCount);
-    const count = useAppSelector(selectAvailableCount);
+    const lines = useAppSelector(selectCartLines);
+    const count = useAppSelector(selectCartCount);
     const subtotal = useAppSelector(selectCartSubtotal);
-    const catalogStatus = useAppSelector((state) => state.catalog.status);
-
-    // Sold-out products stay in the cart page but are never ordered.
-    const lines = allLines.filter((line) => line.available);
 
     const [values, setValues] = useState<CheckoutValues>(emptyCheckoutValues);
     const [errors, setErrors] = useState<CheckoutErrors>({});
     const [submitting, setSubmitting] = useState(false);
     const [formMessage, setFormMessage] = useState<string | null>(null);
 
-    function updateField(field: CheckoutField, value: string) {
-        setValues((current) => ({ ...current, [field]: value }));
+    // The lists in the union and ward drop-downs depend on the choices above them.
+    const areas = getAreas(values.upazila);
+    const pourashavas = areas.filter((area) => area.type === "pourashava");
+    const unionAreas = areas.filter((area) => area.type === "union");
+    const wardCount = values.union
+        ? getWardCount(values.upazila, values.union)
+        : 0;
 
-        if (errors[field]) {
-            setErrors((current) => ({ ...current, [field]: undefined }));
-        }
+    function updateField(field: CheckoutField, value: string) {
+        const dependents = DEPENDENT_FIELDS[field] ?? [];
+
+        setValues((current) => {
+            const next = { ...current, [field]: value };
+
+            for (const dependent of dependents) {
+                next[dependent] = "";
+            }
+
+            return next;
+        });
+
+        setErrors((current) => {
+            const next = { ...current };
+
+            delete next[field];
+
+            for (const dependent of dependents) {
+                delete next[dependent];
+            }
+
+            return next;
+        });
     }
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -148,17 +222,10 @@ export default function CheckoutForm() {
 
         if (!outcome.ok) {
             setFormMessage(outcome.message);
-
-            // The stock or the product list changed: refresh it so the cart shows the truth.
-            if (outcome.stockProblem) {
-                dispatch(loadCatalog());
-            }
-
             return;
         }
 
-        // The order is placed. Keep it for the success page, then empty the cart.
-        saveLastOrder(outcome.order);
+        // TODO: build the /order-success page together with the orders backend.
         dispatch(clearCart());
         router.push("/order-success");
     }
@@ -172,41 +239,6 @@ export default function CheckoutForm() {
             >
                 চেকআউট লোড হচ্ছে...
             </p>
-        );
-    }
-
-    // The cart holds only ids, so wait for the products (names, prices) to arrive.
-    if (savedCount > 0 && (catalogStatus === "idle" || catalogStatus === "loading")) {
-        return (
-            <p
-                role="status"
-                className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground"
-            >
-                পণ্যের তথ্য লোড হচ্ছে...
-            </p>
-        );
-    }
-
-    if (savedCount > 0 && catalogStatus === "error") {
-        return (
-            <div
-                role="alert"
-                className="rounded-2xl border border-border bg-card p-8 text-center"
-            >
-                <p className="text-lg font-semibold text-foreground">
-                    পণ্যের তথ্য লোড করা যায়নি
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    ইন্টারনেট দেখে আবার চেষ্টা করুন। আপনার কার্ট ঠিকই আছে।
-                </p>
-                <button
-                    type="button"
-                    onClick={() => dispatch(loadCatalog())}
-                    className="mt-4 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
-                >
-                    আবার চেষ্টা করুন
-                </button>
-            </div>
         );
     }
 
@@ -397,37 +429,25 @@ export default function CheckoutForm() {
                             required
                             error={errors.upazila}
                         >
-                            <div className="relative">
-                                <select
-                                    id="checkout-upazila"
-                                    name="upazila"
-                                    aria-required="true"
-                                    aria-invalid={errors.upazila ? true : undefined}
-                                    aria-describedby={describedBy(
-                                        "checkout-upazila",
-                                        errors.upazila,
-                                    )}
-                                    value={values.upazila}
-                                    onChange={(event) =>
-                                        updateField("upazila", event.target.value)
-                                    }
-                                    className={`h-12 appearance-none pr-11 ${controlClass(
-                                        Boolean(errors.upazila),
-                                    )}`}
-                                >
-                                    <option value="">উপজেলা বেছে নিন</option>
-                                    {UPAZILAS.map((upazila) => (
-                                        <option key={upazila} value={upazila}>
-                                            {upazila}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <ChevronDown
-                                    aria-hidden="true"
-                                    className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
-                                />
-                            </div>
+                            <SelectBox
+                                id="checkout-upazila"
+                                name="upazila"
+                                value={values.upazila}
+                                onChange={(value) => updateField("upazila", value)}
+                                hasError={Boolean(errors.upazila)}
+                                required
+                                describedBy={describedBy(
+                                    "checkout-upazila",
+                                    errors.upazila,
+                                )}
+                            >
+                                <option value="">উপজেলা বেছে নিন</option>
+                                {UPAZILAS.map((upazila) => (
+                                    <option key={upazila} value={upazila}>
+                                        {upazila}
+                                    </option>
+                                ))}
+                            </SelectBox>
                         </Field>
 
                         <Field
@@ -436,51 +456,82 @@ export default function CheckoutForm() {
                             required
                             error={errors.union}
                         >
-                            <input
+                            <SelectBox
                                 id="checkout-union"
-                                type="text"
                                 name="union"
-                                autoComplete="off"
-                                placeholder="ইউনিয়ন বা পৌরসভার নাম"
-                                aria-required="true"
-                                aria-invalid={errors.union ? true : undefined}
-                                aria-describedby={describedBy(
+                                value={values.union}
+                                onChange={(value) => updateField("union", value)}
+                                hasError={Boolean(errors.union)}
+                                disabled={!values.upazila}
+                                required
+                                describedBy={describedBy(
                                     "checkout-union",
                                     errors.union,
                                 )}
-                                value={values.union}
-                                onChange={(event) =>
-                                    updateField("union", event.target.value)
-                                }
-                                className={`h-12 ${controlClass(Boolean(errors.union))}`}
-                            />
+                            >
+                                <option value="">
+                                    {values.upazila
+                                        ? "ইউনিয়ন বা পৌরসভা বেছে নিন"
+                                        : "আগে উপজেলা বেছে নিন"}
+                                </option>
+
+                                {pourashavas.length > 0 && (
+                                    <optgroup label="পৌরসভা">
+                                        {pourashavas.map((area) => (
+                                            <option key={area.name} value={area.name}>
+                                                {area.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                )}
+
+                                {unionAreas.length > 0 && (
+                                    <optgroup label="ইউনিয়ন">
+                                        {unionAreas.map((area) => (
+                                            <option key={area.name} value={area.name}>
+                                                {area.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                )}
+                            </SelectBox>
                         </Field>
 
                         <Field
                             id="checkout-ward"
                             label="ওয়ার্ড নম্বর"
-                            hint="জানা থাকলে লিখুন (১ থেকে ৯৯)।"
+                            hint="জানা থাকলে বেছে নিন।"
                             error={errors.ward}
                         >
-                            <input
+                            <SelectBox
                                 id="checkout-ward"
-                                type="text"
                                 name="ward"
-                                inputMode="numeric"
-                                autoComplete="off"
-                                placeholder="যেমন ৫"
-                                aria-invalid={errors.ward ? true : undefined}
-                                aria-describedby={describedBy(
+                                value={values.ward}
+                                onChange={(value) => updateField("ward", value)}
+                                hasError={Boolean(errors.ward)}
+                                disabled={!values.union}
+                                describedBy={describedBy(
                                     "checkout-ward",
                                     errors.ward,
                                     "hint",
                                 )}
-                                value={values.ward}
-                                onChange={(event) =>
-                                    updateField("ward", event.target.value)
-                                }
-                                className={`h-12 ${controlClass(Boolean(errors.ward))}`}
-                            />
+                            >
+                                <option value="">
+                                    {values.union
+                                        ? "ওয়ার্ড বেছে নিন"
+                                        : "আগে ইউনিয়ন বা পৌরসভা বেছে নিন"}
+                                </option>
+
+                                {Array.from({ length: wardCount }, (_, index) => {
+                                    const ward = String(index + 1);
+
+                                    return (
+                                        <option key={ward} value={ward}>
+                                            {toBengaliDigits(ward)} নং ওয়ার্ড
+                                        </option>
+                                    );
+                                })}
+                            </SelectBox>
                         </Field>
                     </div>
 

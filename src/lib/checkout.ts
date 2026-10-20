@@ -1,21 +1,18 @@
 // Checkout form rules. These are plain functions with no React in them,
 // so they are easy to test and to reuse later (for example on the server).
 
-// TODO: confirm which areas Amar Haat really delivers to. These are the upazilas of Feni district.
-export const UPAZILAS: readonly string[] = [
-    "ফেনী সদর",
-    "ছাগলনাইয়া",
-    "দাগনভূঞা",
-    "ফুলগাজী",
-    "পরশুরাম",
-    "সোনাগাজী",
-];
+import { AREAS_BY_UPAZILA, getWardCount, isValidArea } from "./feni-areas";
+
+// TODO: confirm which areas Amar Haat really delivers to. For now every upazila of Feni district is listed.
+export const UPAZILAS: readonly string[] = Object.keys(AREAS_BY_UPAZILA);
 
 export type CheckoutValues = {
     name: string;
     phone: string;
     upazila: string;
+    // The name of the union, or of the pourashava (municipality) for people living in a town.
     union: string;
+    // Optional ward number, "1" to "9" ("1" to "18" in Feni Pourashava).
     ward: string;
     address: string;
     note: string;
@@ -35,6 +32,13 @@ export const FIELD_ORDER: CheckoutField[] = [
     "address",
     "note",
 ];
+
+// When one of these fields changes, the fields listed for it must be cleared,
+// because the union list depends on the upazila and the ward list on the union.
+export const DEPENDENT_FIELDS: Partial<Record<CheckoutField, CheckoutField[]>> = {
+    upazila: ["union", "ward"],
+    union: ["ward"],
+};
 
 export const emptyCheckoutValues: CheckoutValues = {
     name: "",
@@ -80,7 +84,7 @@ export function validateCheckout(values: CheckoutValues): ValidationResult {
         name: values.name.trim().replace(/\s+/g, " "),
         phone: normalizePhone(values.phone),
         upazila: values.upazila,
-        union: values.union.trim().replace(/\s+/g, " "),
+        union: values.union,
         ward: toEnglishDigits(values.ward.trim()),
         address: values.address.trim(),
         note: values.note.trim(),
@@ -106,20 +110,19 @@ export function validateCheckout(values: CheckoutValues): ValidationResult {
         errors.upazila = "আপনার উপজেলা বেছে নিন।";
     }
 
-    if (!cleaned.union) {
-        errors.union = "আপনার ইউনিয়ন বা পৌরসভার নাম লিখুন।";
-    } else if (cleaned.union.length < 2) {
-        errors.union = "নামটি অন্তত ২ অক্ষরের হতে হবে।";
-    } else if (cleaned.union.length > 50) {
-        errors.union = "নাম ৫০ অক্ষরের বেশি হতে পারবে না।";
+    const unionIsValid = isValidArea(cleaned.upazila, cleaned.union);
+
+    if (!unionIsValid) {
+        errors.union = "আপনার ইউনিয়ন বা পৌরসভা বেছে নিন।";
     }
 
-    // The ward number is optional, but if it is given it must be a number from 1 to 99.
-    if (cleaned.ward) {
+    // The ward is optional. If one is chosen, it must exist in the chosen union or pourashava.
+    if (cleaned.ward && unionIsValid) {
         const ward = /^\d{1,2}$/.test(cleaned.ward) ? Number(cleaned.ward) : NaN;
+        const lastWard = getWardCount(cleaned.upazila, cleaned.union);
 
-        if (!Number.isInteger(ward) || ward < 1 || ward > 99) {
-            errors.ward = "ওয়ার্ড নম্বর ১ থেকে ৯৯-এর মধ্যে একটি সংখ্যা হতে হবে।";
+        if (!Number.isInteger(ward) || ward < 1 || ward > lastWard) {
+            errors.ward = "তালিকা থেকে সঠিক ওয়ার্ড নম্বর বেছে নিন।";
         } else {
             cleaned.ward = String(ward);
         }

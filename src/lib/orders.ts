@@ -104,3 +104,62 @@ export async function placeOrder(request: OrderRequest): Promise<OrderResult> {
         };
     }
 }
+
+// ---------- Order tracking (for guests, no login needed) ----------
+
+export type TrackResult =
+    | { ok: true; order: PlacedOrder }
+    | { ok: false; message: string };
+
+// Looks an order up by its number AND the phone number used for it.
+export async function trackOrder(
+    orderNumber: string,
+    phone: string,
+): Promise<TrackResult> {
+    try {
+        const response = await apiFetch<{ success: boolean; data: PlacedOrder }>(
+            `/orders/track/${encodeURIComponent(orderNumber)}?phone=${encodeURIComponent(phone)}`,
+            { cache: "no-store" },
+        );
+
+        return { ok: true, order: response.data };
+    } catch (error) {
+        if (error instanceof ApiError) {
+            if (error.status === 404) {
+                return {
+                    ok: false,
+                    message:
+                        "এই অর্ডার নম্বর ও মোবাইল নম্বরের সাথে মেলে এমন কোনো অর্ডার পাওয়া যায়নি। দুটোই আবার দেখে নিন।",
+                };
+            }
+
+            if (error.status === 429) {
+                return {
+                    ok: false,
+                    message: "অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।",
+                };
+            }
+
+            if (error.status === 0) {
+                return {
+                    ok: false,
+                    message:
+                        "সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না। ইন্টারনেট দেখে আবার চেষ্টা করুন।",
+                };
+            }
+        }
+
+        return {
+            ok: false,
+            message: "অর্ডারের তথ্য আনা যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।",
+        };
+    }
+}
+
+// The steps an order moves through. CANCELLED is handled separately.
+export const ORDER_STEPS: { status: string; label: string }[] = [
+    { status: "PENDING", label: "অর্ডার গ্রহণ" },
+    { status: "CONFIRMED", label: "নিশ্চিত" },
+    { status: "OUT_FOR_DELIVERY", label: "ডেলিভারির পথে" },
+    { status: "DELIVERED", label: "পৌঁছেছে" },
+];
