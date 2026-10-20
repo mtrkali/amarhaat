@@ -17,23 +17,26 @@ import {
 } from "../../lib/checkout";
 import {
     clearCart,
+    selectAvailableCount,
     selectCartCount,
     selectCartHydrated,
     selectCartLines,
     selectCartSubtotal,
 } from "../../lib/features/cartSlice";
+import { loadCatalog } from "../../lib/features/catalogSlice";
 import {
     getAreas,
     getWardCount,
     toBengaliDigits,
 } from "../../lib/feni-areas";
 import { useAppDispatch, useAppSelector } from "../../lib/hooks";
+import { saveLastOrder } from "../../lib/last-order";
 import { placeOrder } from "../../lib/orders";
 
 function controlClass(hasError: boolean) {
     return `w-full rounded-xl border bg-input px-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:ring-2 ${hasError
-            ? "border-error focus:border-error focus:ring-error/25"
-            : "border-border focus:border-focus-ring focus:ring-focus-ring/25"
+        ? "border-error focus:border-error focus:ring-error/25"
+        : "border-border focus:border-focus-ring focus:ring-focus-ring/25"
         }`;
 }
 
@@ -147,9 +150,14 @@ export default function CheckoutForm() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const hydrated = useAppSelector(selectCartHydrated);
-    const lines = useAppSelector(selectCartLines);
-    const count = useAppSelector(selectCartCount);
+    const allLines = useAppSelector(selectCartLines);
+    const savedCount = useAppSelector(selectCartCount);
+    const count = useAppSelector(selectAvailableCount);
     const subtotal = useAppSelector(selectCartSubtotal);
+    const catalogStatus = useAppSelector((state) => state.catalog.status);
+
+    // Sold-out products stay in the cart page but are never ordered.
+    const lines = allLines.filter((line) => line.available);
 
     const [values, setValues] = useState<CheckoutValues>(emptyCheckoutValues);
     const [errors, setErrors] = useState<CheckoutErrors>({});
@@ -222,10 +230,17 @@ export default function CheckoutForm() {
 
         if (!outcome.ok) {
             setFormMessage(outcome.message);
+
+            // The stock or the product list changed: refresh it so the cart shows the truth.
+            if (outcome.stockProblem) {
+                dispatch(loadCatalog());
+            }
+
             return;
         }
 
-        // TODO: build the /order-success page together with the orders backend.
+        // The order is placed. Keep it for the success page, then empty the cart.
+        saveLastOrder(outcome.order);
         dispatch(clearCart());
         router.push("/order-success");
     }
@@ -239,6 +254,41 @@ export default function CheckoutForm() {
             >
                 চেকআউট লোড হচ্ছে...
             </p>
+        );
+    }
+
+    // The cart holds only ids, so wait for the products (names, prices) to arrive.
+    if (savedCount > 0 && (catalogStatus === "idle" || catalogStatus === "loading")) {
+        return (
+            <p
+                role="status"
+                className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground"
+            >
+                পণ্যের তথ্য লোড হচ্ছে...
+            </p>
+        );
+    }
+
+    if (savedCount > 0 && catalogStatus === "error") {
+        return (
+            <div
+                role="alert"
+                className="rounded-2xl border border-border bg-card p-8 text-center"
+            >
+                <p className="text-lg font-semibold text-foreground">
+                    পণ্যের তথ্য লোড করা যায়নি
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    ইন্টারনেট দেখে আবার চেষ্টা করুন। আপনার কার্ট ঠিকই আছে।
+                </p>
+                <button
+                    type="button"
+                    onClick={() => dispatch(loadCatalog())}
+                    className="mt-4 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+                >
+                    আবার চেষ্টা করুন
+                </button>
+            </div>
         );
     }
 
