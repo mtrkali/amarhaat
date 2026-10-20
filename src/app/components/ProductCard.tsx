@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
-import type { Product } from "../../lib/mock-data";
+import type { Product } from "../../lib/catalog";
 import QuickAddButton from "./QuickAddButton"
 
 
@@ -10,7 +10,7 @@ type ProductCardProps = {
 };
 
 export default function ProductCard({ product }: ProductCardProps) {
-    const { name, price, oldPrice, rating, reviewCount, emoji, image, href } =
+    const { name, price, oldPrice, rating, reviewCount, stock, emoji, image, href } =
         product;
 
     const discount =
@@ -66,16 +66,26 @@ export default function ProductCard({ product }: ProductCardProps) {
                     )}
                 </p>
 
-                <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Star
-                        aria-hidden="true"
-                        className="size-3.5 fill-amber-500 text-amber-500"
-                    />
-                    <span className="sr-only">রেটিং ৫ এর মধ্যে </span>
-                    {rating.toFixed(1)} ({reviewCount})
-                </p>
+                {reviewCount > 0 ? (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Star
+                            aria-hidden="true"
+                            className="size-3.5 fill-amber-500 text-amber-500"
+                        />
+                        <span className="sr-only">রেটিং ৫ এর মধ্যে </span>
+                        {rating.toFixed(1)} ({reviewCount})
+                    </p>
+                ) : (
+                    <p className="text-xs text-muted-foreground">
+                        এখনো রিভিউ নেই
+                    </p>
+                )}
 
-                <QuickAddButton productId={product.id} productName={name} />
+                <QuickAddButton
+                    productId={product.id}
+                    productName={name}
+                    soldOut={stock <= 0}
+                />
             </div>
         </article>
     );

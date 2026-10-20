@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
-    categories,
-    getCategory,
-    getProductsByCategory,
-} from "../../../lib/mock-data";
+    getCategories,
+    getProducts,
+    type Category,
+    type Product,
+} from "../../../lib/catalog";
 import CategoryChips from "../../components/CategoryChips";
+import LoadError from "../../components/LoadError";
 import PageHeading from "../../components/PageHeading";
 import ProductGrid from "../../components/ProductGrid";
 
@@ -13,18 +15,16 @@ type CategoryPageProps = {
     params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-    return categories.map((category) => ({ slug: category.id }));
-}
-
 export async function generateMetadata({
     params,
 }: CategoryPageProps): Promise<Metadata> {
     const { slug } = await params;
-    const category = getCategory(slug);
+    const category = await getCategories()
+        .then((list) => list.find((item) => item.id === slug))
+        .catch(() => undefined);
 
     if (!category) {
-        return { title: "ক্যাটাগরি পাওয়া যায়নি | Amar Haat" };
+        return { title: "ক্যাটাগরি | Amar Haat" };
     }
 
     return {
@@ -35,13 +35,33 @@ export async function generateMetadata({
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
     const { slug } = await params;
-    const category = getCategory(slug);
+
+    let category: Category | undefined;
+    let items: Product[] = [];
+    let failed = false;
+
+    try {
+        const categories = await getCategories();
+        category = categories.find((item) => item.id === slug);
+
+        if (category) {
+            items = await getProducts(category.id);
+        }
+    } catch {
+        failed = true;
+    }
+
+    if (failed) {
+        return (
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+                <LoadError />
+            </main>
+        );
+    }
 
     if (!category) {
         notFound();
     }
-
-    const items = getProductsByCategory(category.id);
 
     return (
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 pt-6 sm:px-6 lg:px-8">

@@ -6,12 +6,15 @@ type QuantitySteppersProps = {
     onChange: (nextNumber: number) => void;
     // Used in the screen reader label , e.g. the product name.
     label?: string;
+    // The most that can be chosen. Defaults to the cart limit; pass less when stock is low.
+    max?: number;
 }
 
 export default function QuantityStepper({
     value,
     onChange,
     label,
+    max = MAX_QUANTITY,
 }: QuantitySteppersProps) {
     return (
         <div
@@ -39,7 +42,7 @@ export default function QuantityStepper({
             <button
                 type="button"
                 onClick={() => onChange(value + 1)}
-                disabled={value >= MAX_QUANTITY}
+                disabled={value >= max}
                 aria-label="পরিমাণ বাড়ান"
                 className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted disabled:opacity-40"
             >

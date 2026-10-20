@@ -1,8 +1,12 @@
 import { ChevronDown } from "lucide-react";
-import { faqs } from "../../lib/mock-data";
+import { getFaqs } from "../../lib/catalog";
 import SectionHeader from "./SectionHeader";
 
-export default function FaqSection() {
+export default async function FaqSection() {
+    const faqs = await getFaqs().catch(() => []);
+
+    if (faqs.length === 0) return null;
+
     return (
         <section aria-labelledby="faq-heading">
             <SectionHeader

@@ -8,10 +8,12 @@ import { useAppDispatch } from "../../lib/hooks";
 type QuickAddButtonProps = {
     productId: string;
     productName: string;
+    soldOut?: boolean;
 };
 export default function QuickAddButton({
     productId,
     productName,
+    soldOut = false,
 }: QuickAddButtonProps) {
     const dispatch = useAppDispatch();
     const [added, setAdded] = useState(false);
@@ -31,6 +33,19 @@ export default function QuickAddButton({
         if (timer.current) clearTimeout(timer.current);
         timer.current = setTimeout(() => setAdded(false), 1500)
     }
+    if (soldOut) {
+        return (
+            <button
+                type="button"
+                disabled
+                aria-label={`${productName}: স্টক শেষ`}
+                className="mt-auto flex h-10 w-full items-center justify-center rounded-lg bg-muted text-sm font-semibold text-muted-foreground"
+            >
+                স্টক শেষ
+            </button>
+        );
+    }
+
     return (
         <>
             <button

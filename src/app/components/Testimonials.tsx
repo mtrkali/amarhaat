@@ -1,8 +1,13 @@
 import { Star } from "lucide-react";
-import { testimonials } from "../../lib/mock-data";
+import { getTestimonials } from "../../lib/catalog";
 import SectionHeader from "./SectionHeader";
 
-export default function Testimonials() {
+export default async function Testimonials() {
+    const testimonials = await getTestimonials().catch(() => []);
+
+    // No real customer opinions yet: leave the section out instead of showing fake ones.
+    if (testimonials.length === 0) return null;
+
     return (
         <section aria-labelledby="testimonials-heading">
             <SectionHeader
@@ -46,8 +51,8 @@ export default function Testimonials() {
                                         key={index}
                                         aria-hidden="true"
                                         className={`size-4 ${index < item.rating
-                                                ? "fill-amber-500 text-amber-500"
-                                                : "text-border"
+                                            ? "fill-amber-500 text-amber-500"
+                                            : "text-border"
                                             }`}
                                     />
                                 ))}

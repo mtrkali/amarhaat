@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Ellipsis } from "lucide-react";
-import { categories } from "../../lib/mock-data";
+import { getCategories } from "../../lib/catalog";
 import SectionHeader from "./SectionHeader";
 
 const tileClass =
@@ -10,7 +10,12 @@ const tileClass =
 const labelClass =
     "text-[11px] font-medium leading-tight text-foreground sm:text-sm";
 
-export default function CategoryGrid() {
+export default async function CategoryGrid() {
+    const categories = await getCategories().catch(() => []);
+
+    // Nothing to show (or the server is unreachable): leave this section out.
+    if (categories.length === 0) return null;
+
     return (
         <section aria-labelledby="categories-heading">
             <SectionHeader

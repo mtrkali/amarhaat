@@ -4,11 +4,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShieldCheck, Star, Truck, UserCheck } from "lucide-react";
 import {
-    getCategory,
-    getProductsByCategory,
-    products,
-} from "../../../lib/mock-data";
+    getCategories,
+    getProduct,
+    getProducts,
+    type Category,
+    type Product,
+} from "../../../lib/catalog";
 import AddToCart from "../../components/AddToCart";
+import LoadError from "../../components/LoadError";
 import PageHeading from "../../components/PageHeading";
 import ProductGrid from "../../components/ProductGrid";
 import SectionHeader from "../../components/SectionHeader";
@@ -23,22 +26,15 @@ const perks = [
     { Icon: UserCheck, text: "স্থানীয় সেলারের পণ্য" },
 ];
 
-function findProduct(id: string) {
-    return products.find((product) => product.id === id);
-}
-
-export function generateStaticParams() {
-    return products.map((product) => ({ id: product.id }));
-}
-
+// The [id] in the address is the product's slug, for example /products/tomato.
 export async function generateMetadata({
     params,
 }: ProductPageProps): Promise<Metadata> {
     const { id } = await params;
-    const product = findProduct(id);
+    const product = await getProduct(id).catch(() => null);
 
     if (!product) {
-        return { title: "পণ্য পাওয়া যায়নি | Amar Haat" };
+        return { title: "পণ্য | Amar Haat" };
     }
 
     return {
@@ -49,17 +45,46 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
     const { id } = await params;
-    const product = findProduct(id);
+
+    let product: Product | null = null;
+    let failed = false;
+
+    try {
+        product = await getProduct(id);
+    } catch {
+        failed = true;
+    }
+
+    if (failed) {
+        return (
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+                <LoadError />
+            </main>
+        );
+    }
 
     if (!product) {
         notFound();
     }
 
-    const category = getCategory(product.categoryId);
+    // The category link and the related products are extras. If they fail to load,
+    // the product itself still shows.
+    let category: Category | undefined;
+    let related: Product[] = [];
 
-    const related = getProductsByCategory(product.categoryId)
-        .filter((item) => item.id !== product.id)
-        .slice(0, 4);
+    try {
+        const [categories, sameCategory] = await Promise.all([
+            getCategories(),
+            getProducts(product.categoryId),
+        ]);
+
+        const { id: productId, categoryId } = product;
+
+        category = categories.find((item) => item.id === categoryId);
+        related = sameCategory.filter((item) => item.id !== productId).slice(0, 4);
+    } catch {
+        // keep the defaults
+    }
 
     const discount =
         product.oldPrice && product.oldPrice > product.price
@@ -118,13 +143,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         )}
 
                         <p className="flex items-center gap-1 text-muted-foreground">
-                            <Star
-                                aria-hidden="true"
-                                className="size-4 fill-amber-500 text-amber-500"
-                            />
-                            <span className="sr-only">রেটিং ৫ এর মধ্যে </span>
-                            {product.rating.toFixed(1)} ({product.reviewCount}টি
-                            রিভিউ)
+                            {product.reviewCount > 0 ? (
+                                <>
+                                    <Star
+                                        aria-hidden="true"
+                                        className="size-4 fill-amber-500 text-amber-500"
+                                    />
+                                    <span className="sr-only">রেটিং ৫ এর মধ্যে </span>
+                                    {product.rating.toFixed(1)} ({product.reviewCount}টি
+                                    রিভিউ)
+                                </>
+                            ) : (
+                                "এখনো কোনো রিভিউ নেই"
+                            )}
                         </p>
                     </div>
 
@@ -153,6 +184,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         productId={product.id}
                         productName={product.name}
                         unitPrice={product.price}
+                        stock={product.stock}
                     />
 
                     <ul className="space-y-3 rounded-2xl border border-border bg-card p-4">

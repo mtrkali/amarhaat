@@ -1,21 +1,24 @@
 import Link from "next/link";
-import { categories } from "../../lib/mock-data";
+import { getCategories } from "../../lib/catalog";
 
 type CategoryChipsProps = {
     // The id of the current category. Leave it out on the "all products" page.
     activeId?: string;
 };
 
-const chips = [
-    { id: "all", name: "সব পণ্য", href: "/products" },
-    ...categories.map((category) => ({
-        id: category.id,
-        name: category.name,
-        href: category.href,
-    })),
-];
+export default async function CategoryChips({ activeId }: CategoryChipsProps) {
+    // If the server cannot be reached, the "all products" chip still shows.
+    const categories = await getCategories().catch(() => []);
 
-export default function CategoryChips({ activeId }: CategoryChipsProps) {
+    const chips = [
+        { id: "all", name: "সব পণ্য", href: "/products" },
+        ...categories.map((category) => ({
+            id: category.id,
+            name: category.name,
+            href: category.href,
+        })),
+    ];
+
     const currentId = activeId ?? "all";
 
     return (
@@ -34,8 +37,8 @@ export default function CategoryChips({ activeId }: CategoryChipsProps) {
                                 href={chip.href}
                                 aria-current={active ? "page" : undefined}
                                 className={`inline-flex h-10 items-center rounded-full border px-4 text-sm font-medium transition-colors ${active
-                                        ? "border-primary bg-primary text-primary-foreground"
-                                        : "border-border bg-card text-foreground hover:border-primary"
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border bg-card text-foreground hover:border-primary"
                                     }`}
                             >
                                 {chip.name}

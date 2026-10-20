@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { sellers } from "../../lib/mock-data";
+import { sellers } from "../../lib/mock-sellers";
 import SectionHeader from "./SectionHeader";
 
 export default function FeaturedSellers() {

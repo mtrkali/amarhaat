@@ -1,8 +1,13 @@
-import { popularProducts } from "../../lib/mock-data";
+import { getProducts, pickPopular } from "../../lib/catalog";
 import ProductCard from "./ProductCard";
 import SectionHeader from "./SectionHeader";
 
-export default function PopularProducts() {
+export default async function PopularProducts() {
+    const products = await getProducts().catch(() => []);
+    const popularProducts = pickPopular(products);
+
+    if (popularProducts.length === 0) return null;
+
     return (
         <section aria-labelledby="products-heading">
             <SectionHeader

@@ -11,24 +11,47 @@ type AddToCartProps = {
     productId: string;
     productName: string;
     unitPrice: number;
+    // How many are in stock. 0 means sold out.
+    stock: number;
 };
 
 export default function AddToCart({
     productId,
     productName,
-    unitPrice }: AddToCartProps) {
+    unitPrice,
+    stock }: AddToCartProps) {
     const dispatch = useAppDispatch();
     const [quantity, setQuantity] = useState(1);
     const [added, setAdded] = useState(false);
 
+    // The cart limit, or the stock if that is lower.
+    const maxQuantity = Math.min(MAX_QUANTITY, stock);
+
     function changeQuantity(next: number) {
-        setQuantity(Math.min(MAX_QUANTITY, Math.max(1, next)));
+        setQuantity(Math.min(maxQuantity, Math.max(1, next)));
         setAdded(false);
     }
 
     function handleAdd() {
         dispatch(addToCart({ productId, quantity }))
-        setAdded(false);
+        setAdded(true);
+    }
+
+    if (stock <= 0) {
+        return (
+            <div className="space-y-4">
+                <button
+                    type="button"
+                    disabled
+                    className="flex h-12 w-full items-center justify-center rounded-full bg-muted text-base font-semibold text-muted-foreground"
+                >
+                    স্টক শেষ
+                </button>
+                <p className="text-sm text-muted-foreground">
+                    এই পণ্যটি এখন পাওয়া যাচ্ছে না। পরে আবার দেখুন।
+                </p>
+            </div>
+        );
     }
 
     return (
@@ -38,6 +61,7 @@ export default function AddToCart({
                     value={quantity}
                     onChange={changeQuantity}
                     label={productName}
+                    max={maxQuantity}
                 />
 
                 <p className="text-right text-sm text-muted-foreground">

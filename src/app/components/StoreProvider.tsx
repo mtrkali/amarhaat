@@ -3,7 +3,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { Provider } from "react-redux";
 import { loadCart, saveCart } from "../../lib/cart-storage";
-import { hydrateCart } from "../../lib/features/cartSlice";
+import { hydrateCart, pruneCart } from "../../lib/features/cartSlice";
+import { loadCatalog } from "../../lib/features/catalogSlice";
 import { makeStore, type AppStore } from "../../lib/store";
 
 
@@ -22,6 +23,14 @@ export default function StoreProvider({ children }: { children: ReactNode }) {
         //    so the server and the browser start from the same empty cart.
 
         store.dispatch(hydrateCart(loadCart()));
+
+        // 1b. Load the products from the backend. The cart needs them for names, prices and stock.
+        //     When they arrive, remove saved cart items whose product no longer exists.
+        store.dispatch(loadCatalog()).then((result) => {
+            if (loadCatalog.fulfilled.match(result)) {
+                store.dispatch(pruneCart(result.payload.map((product) => product.id)));
+            }
+        });
 
         // 2. From new on, save the cart every time the store changes.
         //    the return function stops listening when this component is unmounts.

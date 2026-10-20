@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Product } from "../../lib/mock-data";
+import type { Product } from "../../lib/catalog";
 import ProductCard from "./ProductCard";
 
 type ProductGridProps = {
