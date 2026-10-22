@@ -1,4 +1,5 @@
 import { ApiError, apiFetch } from "./api";
+import { clearToken, loadToken } from "./auth-storage";
 import type { CheckoutValues } from "./checkout";
 
 export type OrderRequest = {
@@ -62,28 +63,49 @@ function failureMessage(error: ApiError): string {
 export async function placeOrder(request: OrderRequest): Promise<OrderResult> {
     const { customer } = request;
 
+    const body = JSON.stringify({
+        customer: {
+            name: customer.name,
+            phone: customer.phone,
+            upazila: customer.upazila,
+            union: customer.union,
+            ward: customer.ward,
+            address: customer.address,
+            note: customer.note,
+        },
+        items: request.items.map((item) => ({
+            productSlug: item.productId,
+            quantity: item.quantity,
+        })),
+    });
+
+    // A logged-in customer's token goes with the order, so it shows up in their profile.
+    function send(token: string | null) {
+        return apiFetch<{ success: boolean; data: PlacedOrder }>("/orders", {
+            method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            body,
+        });
+    }
+
     try {
-        const response = await apiFetch<{ success: boolean; data: PlacedOrder }>(
-            "/orders",
-            {
-                method: "POST",
-                body: JSON.stringify({
-                    customer: {
-                        name: customer.name,
-                        phone: customer.phone,
-                        upazila: customer.upazila,
-                        union: customer.union,
-                        ward: customer.ward,
-                        address: customer.address,
-                        note: customer.note,
-                    },
-                    items: request.items.map((item) => ({
-                        productSlug: item.productId,
-                        quantity: item.quantity,
-                    })),
-                }),
-            },
-        );
+        const token = loadToken();
+        let response;
+
+        try {
+            response = await send(token);
+        } catch (error) {
+            // An expired login must not stop a customer from ordering. Forget it and order as a guest.
+            const loginRejected =
+                token !== null &&
+                error instanceof ApiError &&
+                (error.status === 401 || error.status === 403);
+
+            if (!loginRejected) throw error;
+
+            clearToken();
+            response = await send(null);
+        }
 
         return { ok: true, order: response.data };
     } catch (error) {

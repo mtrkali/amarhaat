@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { Provider } from "react-redux";
+import { fetchMe, isSessionError } from "../../lib/auth";
+import { clearToken, loadToken } from "../../lib/auth-storage";
 import { loadCart, saveCart } from "../../lib/cart-storage";
+import { sessionEnded, sessionStarted } from "../../lib/features/authSlice";
 import { hydrateCart, pruneCart } from "../../lib/features/cartSlice";
 import { loadCatalog } from "../../lib/features/catalogSlice";
 import { makeStore, type AppStore } from "../../lib/store";
@@ -31,6 +34,23 @@ export default function StoreProvider({ children }: { children: ReactNode }) {
                 store.dispatch(pruneCart(result.payload.map((product) => product.id)));
             }
         });
+
+        // 1c. Check the saved login, if there is one. Until this finishes, the auth state is "loading".
+        const token = loadToken();
+
+        if (!token) {
+            store.dispatch(sessionEnded());
+        } else {
+            fetchMe(token)
+                .then((user) => store.dispatch(sessionStarted({ user, token })))
+                .catch((error) => {
+                    // Only a rejected token ends the login. If the server is just unreachable,
+                    // the token stays saved, so the next page load can try again.
+                    if (isSessionError(error)) clearToken();
+
+                    store.dispatch(sessionEnded());
+                });
+        }
 
         // 2. From new on, save the cart every time the store changes.
         //    the return function stops listening when this component is unmounts.
