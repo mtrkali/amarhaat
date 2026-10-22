@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronDown, Menu, Search, ShoppingCart, X } from "lucide-react";
+import { ChevronDown, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { selectCartCount } from "../../lib/features/cartSlice";
 import { useAppSelector } from "../../lib/hooks";
+import DesktopNav from "./DesktopNav";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 
+// Menu for mobile and tablet (below lg). Large screens use DesktopNav instead.
 // TODO: some of these pages don't exist yet. Add them as the app grows.
 const menuLinks = [
     { href: "/", label: "হোম" },
@@ -103,14 +105,23 @@ export default function Header() {
                         )}
                     </Link>
 
-                    {/* Menu */}
+                    {/* Account (large screens; mobile has it in the menu and BottomNav) */}
+                    <Link
+                        href="/profile"
+                        aria-label="আমার অ্যাকাউন্ট"
+                        className="hidden size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted lg:flex"
+                    >
+                        <User className="size-6" strokeWidth={1.8} />
+                    </Link>
+
+                    {/* Menu (hidden on large screens, where DesktopNav takes over) */}
                     <button
                         type="button"
                         onClick={() => setMenuOpen((open) => !open)}
                         aria-label={menuOpen ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
                         aria-expanded={menuOpen}
                         aria-controls="site-menu"
-                        className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+                        className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted lg:hidden"
                     >
                         {menuOpen ? (
                             <X className="size-6" strokeWidth={1.8} />
@@ -121,6 +132,9 @@ export default function Header() {
                 </div>
             </div>
 
+            {/* Desktop navigation links (lg and up) */}
+            <DesktopNav />
+
             {/*
               Menu panel. It stays mounted (hidden when closed) so ThemeToggle
               keeps its state instead of re-reading localStorage on every open.
@@ -128,7 +142,7 @@ export default function Header() {
             <div
                 id="site-menu"
                 hidden={!menuOpen}
-                className="absolute inset-x-0 top-full max-h-[calc(100dvh-8rem)] overflow-y-auto border-b border-border bg-card shadow-lg"
+                className="absolute inset-x-0 top-full max-h-[calc(100dvh-8rem)] overflow-y-auto border-b border-border bg-card shadow-lg lg:hidden"
             >
                 <nav
                     aria-label="মেনু"
