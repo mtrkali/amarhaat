@@ -12,7 +12,7 @@ const primaryLinks = [
     { href: "/orders", label: "আমার অর্ডার" },
 ];
 
-// TODO: /sell and /help are still to be built.
+// TODO: /sell is still to be built.
 const secondaryLinks = [
     { href: "/sell", label: "বিক্রেতা হিসেবে যোগ দিন" },
     { href: "/help", label: "সাহায্য ও FAQ" },

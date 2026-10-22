@@ -129,10 +129,19 @@ export async function getCategories(): Promise<Category[]> {
     return response.data.map(toCategory);
 }
 
-export async function getProducts(categorySlug?: string): Promise<Product[]> {
-    const query = categorySlug
-        ? `?category=${encodeURIComponent(categorySlug)}`
-        : "";
+// `search` is the text from the search box. The backend matches it against the
+// product name, description and category.
+export async function getProducts(
+    categorySlug?: string,
+    search?: string,
+): Promise<Product[]> {
+    const params = new URLSearchParams();
+
+    if (categorySlug) params.set("category", categorySlug);
+    if (search) params.set("q", search);
+
+    const queryString = params.toString();
+    const query = queryString ? `?${queryString}` : "";
 
     const response = await apiFetch<ListResponse<ApiProduct>>(
         `/products${query}`,

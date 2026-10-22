@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
 import { ChevronDown, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { selectCartCount } from "../../lib/features/cartSlice";
 import { useAppSelector } from "../../lib/hooks";
@@ -23,6 +24,7 @@ const menuLinks = [
 export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
     const cartCount = useAppSelector(selectCartCount);
+    const router = useRouter();
 
     // Close the menu with the Escape key.
     useEffect(() => {
@@ -37,6 +39,21 @@ export default function Header() {
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [menuOpen]);
+
+    // Go to the search results on /products. An empty box does nothing.
+    function handleSearch(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        const input = form.elements.namedItem("q") as HTMLInputElement;
+        const query = input.value.trim().replace(/\s+/g, " ");
+
+        if (!query) return;
+
+        // Hides the keyboard on phones.
+        input.blur();
+        router.push(`/products?q=${encodeURIComponent(query)}`);
+    }
 
     const cartLabel =
         cartCount > 0 ? `কার্ট, ${cartCount}টি পণ্য` : "কার্ট";
@@ -53,6 +70,8 @@ export default function Header() {
                 {/* Product Search */}
                 <form
                     role="search"
+                    action="/products"
+                    onSubmit={handleSearch}
                     className="order-3 basis-full lg:order-2 lg:mx-auto lg:max-w-xl lg:flex-1 lg:basis-auto"
                 >
                     <label htmlFor="product-search" className="sr-only">
@@ -62,14 +81,14 @@ export default function Header() {
                     <div className="relative">
                         <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
 
-                        {/* TODO: connect to a search page / API. */}
                         <input
                             id="product-search"
                             type="search"
-                            name="search"
+                            name="q"
+                            maxLength={100}
                             enterKeyHint="search"
                             autoComplete="off"
-                            placeholder="কী খুঁজছেন? (পণ্য, দোকান, ক্যাটাগরি...)"
+                            placeholder="কী খুঁজছেন? (পণ্য, ক্যাটাগরি...)"
                             className="h-12 w-full min-w-0 rounded-xl border border-border bg-input pl-12 pr-4 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-focus-ring focus:ring-2 focus:ring-focus-ring/25"
                         />
                     </div>
