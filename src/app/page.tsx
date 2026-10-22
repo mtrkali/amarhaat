@@ -14,7 +14,7 @@ import WhyAmarHaat from "./components/WhyAmarHaat";
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 pb-10">
-      <HeroBanner image="/images/hero.webp" />
+      <HeroBanner />
       <TrustBadges />
 
       <div className="space-y-10 px-4 pt-8 sm:px-6 lg:px-8">
