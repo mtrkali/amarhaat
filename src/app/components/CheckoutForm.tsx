@@ -158,6 +158,22 @@ export default function CheckoutForm() {
 
     // Sold-out products stay in the cart page but are never ordered.
     const lines = allLines.filter((line) => line.available);
+    const sellerGroups = lines.reduce<Array<{ key: string; name: string; subtotal: number; lines: typeof lines }>>((groups, line) => {
+        const key = line.product.sellerId === null ? "marketplace" : `seller-${line.product.sellerId}`;
+        let group = groups.find((entry) => entry.key === key);
+        if (!group) {
+            group = {
+                key,
+                name: line.product.sellerName ?? "Amar Haat",
+                subtotal: 0,
+                lines: [],
+            };
+            groups.push(group);
+        }
+        group.subtotal += line.lineTotal;
+        group.lines.push(line);
+        return groups;
+    }, []);
 
     const [values, setValues] = useState<CheckoutValues>(emptyCheckoutValues);
     const [errors, setErrors] = useState<CheckoutErrors>({});
@@ -343,8 +359,15 @@ export default function CheckoutForm() {
                     </Link>
                 </div>
 
-                <ul className="mt-4 space-y-3">
-                    {lines.map(({ product, quantity, lineTotal }) => (
+                <div className="mt-4 space-y-4">
+                    {sellerGroups.map((group) => (
+                        <section key={group.key} aria-label={`${group.name} থেকে পণ্য`} className="rounded-xl border border-border p-3">
+                            <div className="mb-3 flex items-center justify-between gap-3 border-b border-border pb-2">
+                                <h3 className="text-sm font-semibold text-foreground">{group.name}</h3>
+                                <span className="text-xs text-muted-foreground">আলাদা বিক্রেতা অর্ডার</span>
+                            </div>
+                            <ul className="space-y-3">
+                    {group.lines.map(({ product, quantity, lineTotal }) => (
                         <li key={product.id} className="flex items-center gap-3">
                             <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
                                 {product.image ? (
@@ -379,7 +402,14 @@ export default function CheckoutForm() {
                             </p>
                         </li>
                     ))}
-                </ul>
+                            </ul>
+                            <p className="mt-3 flex justify-between border-t border-border pt-3 text-sm">
+                                <span className="text-muted-foreground">এই বিক্রেতার পণ্য</span>
+                                <span className="font-semibold text-foreground">৳{group.subtotal}</span>
+                            </p>
+                        </section>
+                    ))}
+                </div>
 
                 <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
                     <div className="flex justify-between gap-4">

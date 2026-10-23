@@ -70,6 +70,28 @@ export default function OrderSuccess() {
                 </p>
             </div>
 
+            {order.orders && order.orders.length > 0 && (
+                <section aria-labelledby="seller-orders-heading" className="rounded-2xl border border-border bg-card p-5">
+                    <h2 id="seller-orders-heading" className="text-lg font-bold text-foreground">
+                        বিক্রেতাভিত্তিক অর্ডার
+                    </h2>
+                    <ul className="mt-3 divide-y divide-border">
+                        {order.orders.map((sellerOrder) => (
+                            <li key={sellerOrder.orderNumber} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
+                                <span>
+                                    <span className="block font-semibold text-foreground">{sellerOrder.sellerName}</span>
+                                    <span className="text-muted-foreground">অর্ডার নম্বর: {sellerOrder.orderNumber}</span>
+                                </span>
+                                <span className="font-semibold text-foreground">৳{sellerOrder.total}</span>
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                        প্রতিটি বিক্রেতা তাদের পণ্যের জন্য আলাদা অর্ডার পাবেন।
+                    </p>
+                </section>
+            )}
+
             <section
                 aria-labelledby="success-items-heading"
                 className="rounded-2xl border border-border bg-card p-5"
@@ -151,6 +173,12 @@ export default function OrderSuccess() {
                     আরও কেনাকাটা করুন
                 </Link>
             </div>
+
+            {order.trackingToken && (
+                <p className="text-center text-xs text-muted-foreground">
+                    নিরাপদ ট্র্যাকিং লিংক: <Link className="font-medium text-primary underline" href={`/orders?token=${encodeURIComponent(order.trackingToken)}`}>অর্ডার ট্র্যাক করুন</Link>
+                </p>
+            )}
         </div>
     );
 }

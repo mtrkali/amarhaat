@@ -12,6 +12,8 @@ export type OrderRequest = {
 // What the backend returns for a placed order (only the parts the site uses).
 export type PlacedOrder = {
     orderNumber: string;
+    groupNumber?: string;
+    trackingToken?: string;
     status: string;
     customerName: string;
     customerPhone: string;
@@ -29,7 +31,39 @@ export type PlacedOrder = {
         quantity: number;
         lineTotal: number;
     }[];
+    orders?: {
+        orderNumber: string;
+        sellerId: number | null;
+        sellerName: string;
+        status: string;
+        subtotal: number;
+        deliveryFee: number;
+        total: number;
+        upazila: string;
+        union: string;
+        address: string;
+        items: PlacedOrder["items"];
+    }[];
 };
+
+type PlacedOrderGroup = Omit<PlacedOrder, "items"> & {
+    groupNumber: string;
+    trackingToken?: string;
+    orders: NonNullable<PlacedOrder["orders"]>;
+};
+
+function orderFromGroup(group: PlacedOrderGroup): PlacedOrder {
+    const firstOrder = group.orders[0];
+    return {
+        ...group,
+        orderNumber: group.groupNumber,
+        status: firstOrder?.status ?? "PENDING",
+        upazila: firstOrder?.upazila ?? group.upazila,
+        union: firstOrder?.union ?? group.union,
+        address: firstOrder?.address ?? group.address,
+        items: group.orders.flatMap((order) => order.items),
+    };
+}
 
 export type OrderResult =
     | { ok: true; order: PlacedOrder }
@@ -60,6 +94,32 @@ function failureMessage(error: ApiError): string {
     return "অর্ডার পাঠানো যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।";
 }
 
+// One random key per checkout attempt. If the answer to an order is lost (bad connection, timeout),
+// the customer taps "order" again and the SAME key is sent, so the server returns the first order
+// instead of creating a second one. The key is dropped as soon as the outcome is certain.
+let pendingAttempt: { key: string; body: string } | null = null;
+
+function randomKey(): string {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
+    }
+
+    const bytes = new Uint8Array(16);
+
+    crypto.getRandomValues(bytes);
+
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function keyFor(body: string): string {
+    // A different cart or different details must never reuse an old key.
+    if (!pendingAttempt || pendingAttempt.body !== body) {
+        pendingAttempt = { key: randomKey(), body };
+    }
+
+    return pendingAttempt.key;
+}
+
 export async function placeOrder(request: OrderRequest): Promise<OrderResult> {
     const { customer } = request;
 
@@ -80,10 +140,15 @@ export async function placeOrder(request: OrderRequest): Promise<OrderResult> {
     });
 
     // A logged-in customer's token goes with the order, so it shows up in their profile.
+    const idempotencyKey = keyFor(body);
+
     function send(token: string | null) {
         return apiFetch<{ success: boolean; data: PlacedOrder }>("/orders", {
             method: "POST",
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: {
+                "Idempotency-Key": idempotencyKey,
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
             body,
         });
     }
@@ -107,8 +172,21 @@ export async function placeOrder(request: OrderRequest): Promise<OrderResult> {
             response = await send(null);
         }
 
-        return { ok: true, order: response.data };
+        pendingAttempt = null; // the order exists, the key has done its job
+        const group = response.data as PlacedOrderGroup;
+        return { ok: true, order: orderFromGroup(group) };
     } catch (error) {
+        // Keep the key only when we cannot tell whether the order was saved
+        // (no answer from the server, or a server error). Any clear "no" starts fresh next time.
+        const outcomeUnknown =
+            error instanceof ApiError
+                ? error.status === 0 || error.status >= 500
+                : true;
+
+        if (!outcomeUnknown) {
+            pendingAttempt = null;
+        }
+
         if (error instanceof ApiError) {
             return {
                 ok: false,
@@ -144,7 +222,8 @@ export async function trackOrder(
             { cache: "no-store" },
         );
 
-        return { ok: true, order: response.data };
+        const group = response.data as PlacedOrderGroup;
+        return { ok: true, order: orderFromGroup(group) };
     } catch (error) {
         if (error instanceof ApiError) {
             if (error.status === 404) {
@@ -175,6 +254,22 @@ export async function trackOrder(
             ok: false,
             message: "অর্ডারের তথ্য আনা যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।",
         };
+    }
+}
+
+export async function trackOrderWithToken(token: string): Promise<TrackResult> {
+    try {
+        const response = await apiFetch<{ success: boolean; data: PlacedOrderGroup }>(
+            `/orders/track/token?token=${encodeURIComponent(token)}`,
+            { cache: "no-store" },
+        );
+        const group = response.data;
+        return { ok: true, order: orderFromGroup(group) };
+    } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+            return { ok: false, message: "এই ট্র্যাকিং লিংকটি সঠিক নয় বা আর কাজ করছে না।" };
+        }
+        return { ok: false, message: "অর্ডারের তথ্য আনা যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।" };
     }
 }
 

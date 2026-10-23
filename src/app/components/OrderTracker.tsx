@@ -5,7 +5,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Check, XCircle } from "lucide-react";
 import { normalizePhone } from "../../lib/checkout";
 import { loadLastOrder } from "../../lib/last-order";
-import { ORDER_STEPS, trackOrder, type PlacedOrder } from "../../lib/orders";
+import { ORDER_STEPS, trackOrder, trackOrderWithToken, type PlacedOrder } from "../../lib/orders";
 
 const inputClass =
     "h-12 w-full rounded-xl border border-border bg-input px-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-focus-ring focus:ring-2 focus:ring-focus-ring/25";
@@ -73,6 +73,16 @@ export default function OrderTracker() {
 
     // If an order was just placed in this tab, fill in its number and phone.
     useEffect(() => {
+        const token = new URLSearchParams(window.location.search).get("token");
+        if (token) {
+            setLoading(true);
+            void trackOrderWithToken(token).then((result) => {
+                setLoading(false);
+                if (result.ok) setOrder(result.order);
+                else setMessage(result.message);
+            });
+            return;
+        }
         const last = loadLastOrder();
 
         if (last) {
@@ -182,6 +192,20 @@ export default function OrderTracker() {
                             {order.orderNumber}
                         </p>
                     </div>
+
+                    {order.orders && order.orders.length > 1 && (
+                        <div className="rounded-xl border border-border p-4">
+                            <p className="font-semibold text-foreground">বিক্রেতাভিত্তিক অর্ডার</p>
+                            <ul className="mt-2 space-y-2 text-sm">
+                                {order.orders.map((child) => (
+                                    <li key={child.orderNumber} className="flex justify-between gap-3">
+                                        <span className="text-muted-foreground">{child.sellerName} · {child.orderNumber}</span>
+                                        <span className="font-medium text-foreground">৳{child.total}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     <StatusSteps status={order.status} />
 

@@ -10,7 +10,7 @@ const SLIDE_MS = 5000;
 const FALLBACK_IMAGE = "/images/hero.webp";
 
 const HERO_IMAGE: Record<string, string> = {
-    "vegetables-fruits": "/images/hero/vegetables-fruits.webp",
+    vegetables_fruits: "/images/hero/vegetables-fruits.webp",
     food: "/images/hero/food.webp",
     clothing: "/images/hero/clothing.webp",
     electronics: "/images/hero/electronics.webp",
@@ -86,10 +86,10 @@ export default function HeroSlideshow({ categories }: HeroSlideshowProps) {
                 className="absolute inset-0 z-[1] bg-gradient-to-r from-surface-green via-surface-green/30 to-surface-green/0"
             />
 
-            <div className="relative z-[2] px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-14 lg:px-10 lg:pb-24 lg:pt-16">
+            <div className="relative z-[2] px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-14 lg:px-10 lg:pb-24 lg:pt-16 ">
                 <h1
                     id="hero-heading"
-                    className="max-w-xl text-3xl font-bold leading-snug text-foreground md:max-w-2xl md:text-4xl lg:text-5xl lg:leading-tight"
+                    className="max-w-xl text-3xl font-bold leading-snug text-foreground md:max-w-2xl md:text-4xl lg:text-5xl lg:leading-tight p-3 bg-green-900/10 rounded-xl"
                 >
                     ফেনীর স্থানীয়{" "}
                     <span className="hero-category-word" key={active.id}>

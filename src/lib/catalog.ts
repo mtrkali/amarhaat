@@ -23,6 +23,8 @@ export type Product = {
     rating: number; // 0 when there are no reviews yet
     reviewCount: number;
     stock: number;
+    sellerId: number | null;
+    sellerName: string | null;
     emoji: string;
     image?: string;
     href: string;
@@ -60,6 +62,8 @@ type ApiProduct = {
     price: number;
     oldPrice: number | null;
     stock: number;
+    sellerId: number | null;
+    sellerName: string | null;
     imageUrl: string | null;
     rating: number;
     reviewCount: number;
@@ -112,6 +116,8 @@ function toProduct(product: ApiProduct): Product {
         rating: product.rating,
         reviewCount: product.reviewCount,
         stock: product.stock,
+        sellerId: product.sellerId,
+        sellerName: product.sellerName,
         emoji: CATEGORY_EMOJI[categoryId] ?? DEFAULT_EMOJI,
         image: localImage(product.imageUrl),
         href: `/products/${product.slug}`,
