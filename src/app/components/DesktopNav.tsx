@@ -25,6 +25,9 @@ export default function DesktopNav() {
     const sellerLinks = user?.role === "SELLER"
         ? [{ href: "/seller/dashboard", label: "Seller dashboard" }, ...secondaryLinks]
         : secondaryLinks;
+    const accountLinks = user?.role === "ADMIN"
+        ? [{ href: "/admin", label: "Admin Panel" }, ...sellerLinks]
+        : sellerLinks;
 
     function isActive(href: string) {
         return href === "/"
@@ -60,7 +63,7 @@ export default function DesktopNav() {
                 </ul>
 
                 <div className="flex items-center gap-5">
-                    {sellerLinks.map((link) => (
+                    {accountLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}

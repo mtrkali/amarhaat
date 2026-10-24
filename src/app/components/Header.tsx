@@ -27,9 +27,12 @@ export default function Header() {
     const cartCount = useAppSelector(selectCartCount);
     const authUser = useAppSelector(selectAuthUser);
     const router = useRouter();
-    const visibleMenuLinks = authUser?.role === "SELLER"
-        ? [...menuLinks.slice(0, 3), { href: "/seller/dashboard", label: "Seller dashboard" }, ...menuLinks.slice(3)]
-        : menuLinks;
+    const dashboardLinks = authUser?.role === "ADMIN"
+        ? [{ href: "/admin", label: "Admin Panel" }]
+        : authUser?.role === "SELLER"
+            ? [{ href: "/seller/dashboard", label: "Seller dashboard" }]
+            : [];
+    const visibleMenuLinks = [...menuLinks.slice(0, 3), ...dashboardLinks, ...menuLinks.slice(3)];
 
     // Close the menu with the Escape key.
     useEffect(() => {
