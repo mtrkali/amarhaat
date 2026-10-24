@@ -25,6 +25,45 @@ export type Shop = {
     status: ShopStatus;
 };
 
+export type SellerDashboardProduct = {
+    id: number;
+    slug: string;
+    name: string;
+    price: number;
+    stock: number;
+    isActive: boolean;
+    updatedAt: string;
+};
+
+export type SellerDashboardOrder = {
+    id: number;
+    orderNumber: string;
+    customerName: string;
+    customerPhone: string;
+    subtotal: number;
+    deliveryFee: number;
+    total: number;
+    status: string;
+    createdAt: string;
+    items: { id: number; productName: string; unitPrice: number; quantity: number; lineTotal: number }[];
+};
+
+export type SellerDashboard = {
+    shop: Shop;
+    overview: {
+        totalProducts: number;
+        activeProducts: number;
+        lowStockProducts: number;
+        outOfStockProducts: number;
+        totalOrders: number;
+        pendingOrders: number;
+        deliveredOrders: number;
+        deliveredSales: number;
+    };
+    products: SellerDashboardProduct[];
+    orders: SellerDashboardOrder[];
+};
+
 type DataResponse<T> = { success: boolean; data: T };
 
 // The backend also sends fields the site does not need, so keep only these.
@@ -112,6 +151,38 @@ export async function fetchMyShop(token: string): Promise<Shop | null> {
 
         throw error;
     }
+}
+
+export async function fetchSellerDashboard(token: string): Promise<SellerDashboard> {
+    const response = await apiFetch<DataResponse<SellerDashboard>>(
+        "/sellers/dashboard",
+        withToken(token),
+    );
+    return response.data;
+}
+
+export async function updateSellerStock(token: string, productId: number, stock: number) {
+    const response = await apiFetch<DataResponse<SellerDashboardProduct>>(
+        `/sellers/products/${productId}/stock`,
+        withToken(token, { method: "PATCH", body: JSON.stringify({ stock }) }),
+    );
+    return response.data;
+}
+
+export async function createSellerProduct(token: string, input: {
+    slug: string;
+    name: string;
+    categorySlug: string;
+    price: number;
+    stock: number;
+    description?: string;
+    imageUrl?: string;
+}) {
+    const response = await apiFetch<DataResponse<SellerDashboardProduct>>(
+        "/products",
+        withToken(token, { method: "POST", body: JSON.stringify(input) }),
+    );
+    return response.data;
 }
 
 export async function applyForShop(

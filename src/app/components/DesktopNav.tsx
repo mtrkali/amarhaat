@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import { selectAuthUser } from "../../lib/features/authSlice";
+import { useAppSelector } from "../../lib/hooks";
 
 // Large screens only (lg and up). Below lg the header menu and BottomNav carry navigation.
 const primaryLinks = [
@@ -12,7 +14,6 @@ const primaryLinks = [
     { href: "/orders", label: "আমার অর্ডার" },
 ];
 
-// TODO: /sell is still to be built.
 const secondaryLinks = [
     { href: "/sell", label: "বিক্রেতা হিসেবে যোগ দিন" },
     { href: "/help", label: "সাহায্য ও FAQ" },
@@ -20,6 +21,10 @@ const secondaryLinks = [
 
 export default function DesktopNav() {
     const pathname = usePathname();
+    const user = useAppSelector(selectAuthUser);
+    const sellerLinks = user?.role === "SELLER"
+        ? [{ href: "/seller/dashboard", label: "Seller dashboard" }, ...secondaryLinks]
+        : secondaryLinks;
 
     function isActive(href: string) {
         return href === "/"
@@ -55,7 +60,7 @@ export default function DesktopNav() {
                 </ul>
 
                 <div className="flex items-center gap-5">
-                    {secondaryLinks.map((link) => (
+                    {sellerLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}

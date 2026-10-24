@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ChevronDown, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { selectCartCount } from "../../lib/features/cartSlice";
 import { useAppSelector } from "../../lib/hooks";
+import { selectAuthUser } from "../../lib/features/authSlice";
 import DesktopNav from "./DesktopNav";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
@@ -24,7 +25,11 @@ const menuLinks = [
 export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
     const cartCount = useAppSelector(selectCartCount);
+    const authUser = useAppSelector(selectAuthUser);
     const router = useRouter();
+    const visibleMenuLinks = authUser?.role === "SELLER"
+        ? [...menuLinks.slice(0, 3), { href: "/seller/dashboard", label: "Seller dashboard" }, ...menuLinks.slice(3)]
+        : menuLinks;
 
     // Close the menu with the Escape key.
     useEffect(() => {
@@ -167,7 +172,7 @@ export default function Header() {
                     aria-label="মেনু"
                     className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6 lg:px-8"
                 >
-                    {menuLinks.map((link) => (
+                    {visibleMenuLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
