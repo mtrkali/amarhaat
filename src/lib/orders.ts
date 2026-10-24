@@ -1,9 +1,11 @@
 import { ApiError, apiFetch } from "./api";
 import { clearToken, loadToken } from "./auth-storage";
 import type { CheckoutValues } from "./checkout";
+import type { DeliveryMethod } from "./delivery";
 
 export type OrderRequest = {
     customer: CheckoutValues;
+    deliveryChoices: { sellerId: number | null; method: DeliveryMethod }[];
     // Only product ids (slugs) and quantities are sent. The server looks up the prices
     // itself and never trusts prices that come from the browser.
     items: { productId: string; quantity: number }[];
@@ -137,6 +139,7 @@ export async function placeOrder(request: OrderRequest): Promise<OrderResult> {
             productSlug: item.productId,
             quantity: item.quantity,
         })),
+        deliveryChoices: request.deliveryChoices,
     });
 
     // A logged-in customer's token goes with the order, so it shows up in their profile.

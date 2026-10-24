@@ -1,0 +1,31 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { ApiError } from "../../lib/api";
+import { fetchAdminData, type AdminOrder } from "../../lib/admin";
+import { selectAuthStatus, selectAuthToken, selectAuthUser } from "../../lib/features/authSlice";
+import { useAppSelector } from "../../lib/hooks";
+import { assignRider, createRider, fetchMethods, fetchRiders, saveMethods, verifyRider, type MethodSetting, type Rider } from "../../lib/delivery";
+
+const card = "rounded-2xl border border-border bg-card p-5";
+const button = "inline-flex min-h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50";
+const input = "h-10 rounded-lg border border-border bg-input px-3 text-sm";
+const methodLabels = { PLATFORM_RIDER: "Platform rider", SELLER: "Seller delivery", PICKUP: "Customer pickup" };
+
+export default function AdminDeliveryView() {
+    const token = useAppSelector(selectAuthToken); const auth = useAppSelector(selectAuthStatus); const user = useAppSelector(selectAuthUser);
+    const [methods, setMethods] = useState<MethodSetting[]>([]); const [riders, setRiders] = useState<Rider[]>([]); const [orders, setOrders] = useState<AdminOrder[]>([]);
+    const [userId, setUserId] = useState(""); const [assignment, setAssignment] = useState<Record<number, string>>({}); const [notice, setNotice] = useState(""); const [busy, setBusy] = useState(false);
+    const refresh = useCallback(async () => { if (!token) return; const [m, r, o] = await Promise.all([fetchMethods(), fetchRiders(token), fetchAdminData(token)]); setMethods(m); setRiders(r); setOrders(o.orders); }, [token]);
+    useEffect(() => { if (auth === "authenticated" && user?.role === "ADMIN") void refresh().catch((e: unknown) => setNotice(e instanceof Error ? e.message : "ডেলিভারি তথ্য লোড হয়নি")); }, [auth, user?.role, refresh]);
+    async function act(fn: () => Promise<unknown>, message: string) { setBusy(true); setNotice(""); try { await fn(); await refresh(); setNotice(message); } catch (e) { setNotice(e instanceof ApiError ? e.message : "অনুরোধটি সম্পন্ন হয়নি"); } finally { setBusy(false); } }
+    if (auth === "loading") return <p className={card}>লোড হচ্ছে…</p>;
+    if (!token || user?.role !== "ADMIN") return <div className={card}>এই পৃষ্ঠা শুধু admin ব্যবহার করতে পারেন।</div>;
+    return <div className="space-y-6">
+        <header className={`${card} flex flex-wrap items-center justify-between gap-3`}><div><h2 className="text-xl font-bold">ডেলিভারি পরিচালনা</h2><p className="text-sm text-muted-foreground">পদ্ধতি চালু/বন্ধ করুন, rider যাচাই ও অর্ডার assign করুন।</p></div><button className={button} onClick={() => void refresh()}>রিফ্রেশ</button></header>
+        {notice && <p role="status" className="text-sm text-primary">{notice}</p>}
+        <section className={`${card} space-y-4`}><h3 className="text-lg font-semibold">ডেলিভারি পদ্ধতি ও ফি</h3>{methods.map((m) => <label key={m.method} className="flex flex-wrap items-center gap-3 border-b border-border pb-3"><input type="checkbox" checked={m.enabled} onChange={(e) => setMethods((all) => all.map((x) => x.method === m.method ? { ...x, enabled: e.target.checked } : x))} /><span className="min-w-40 flex-1">{methodLabels[m.method]}</span><span className="text-sm text-muted-foreground">ফি (৳)</span><input aria-label={`${m.method} fee`} type="number" min="0" max="100000" value={m.fee} onChange={(e) => setMethods((all) => all.map((x) => x.method === m.method ? { ...x, fee: Number(e.target.value) } : x))} className={input} /></label>)}<button className={button} disabled={busy || methods.length !== 3} onClick={() => void act(() => saveMethods(token, methods), "ডেলিভারি পদ্ধতি আপডেট হয়েছে।")}>সেটিংস সেভ</button></section>
+        <section className={`${card} space-y-4`}><h3 className="text-lg font-semibold">Rider অ্যাকাউন্ট</h3><form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); const id = Number(userId); if (Number.isInteger(id) && id > 0) void act(() => createRider(token, id), "Rider profile তৈরি হয়েছে; যাচাইয়ের পর চালু হবে।"); }}><input required type="number" min="1" aria-label="User ID" placeholder="Existing user ID" value={userId} onChange={(e) => setUserId(e.target.value)} className={input} /><button className={button} disabled={busy}>Rider profile তৈরি</button></form><div className="divide-y divide-border">{riders.map((r) => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-semibold">{r.name} · {r.phone}</p><p className="text-xs text-muted-foreground">Rider #{r.id} · user #{r.userId} · {r.verificationStatus}{r.isAvailable ? " · available" : ""}</p></div><div className="flex gap-2">{(["VERIFIED", "REJECTED", "PENDING"] as const).map((status) => <button key={status} disabled={busy || r.verificationStatus === status} className={`${button} ${status === "REJECTED" ? "bg-error" : ""}`} onClick={() => void act(() => verifyRider(token, r.id, status), `Rider ${status.toLowerCase()} করা হয়েছে।`)}>{status === "VERIFIED" ? "যাচাই" : status === "REJECTED" ? "বাতিল" : "Pending"}</button>)}</div></div>)}</div></section>
+        <section className={`${card} space-y-4`}><h3 className="text-lg font-semibold">অর্ডারে Rider assign</h3>{orders.filter((o) => o.status !== "CANCELLED" && o.status !== "DELIVERED").map((order) => <div key={order.id} className="flex flex-wrap items-center gap-3 border-b border-border pb-3"><p className="min-w-48 flex-1"><b>{order.orderNumber}</b><span className="block text-xs text-muted-foreground">{order.customerName} · ৳{order.total}</span></p><select aria-label={`${order.orderNumber} rider`} value={assignment[order.id] ?? ""} onChange={(e) => setAssignment((x) => ({ ...x, [order.id]: e.target.value }))} className={input}><option value="">Verified rider বাছুন</option>{riders.filter((r) => r.verificationStatus === "VERIFIED").map((r) => <option value={r.id} key={r.id}>{r.name} {r.isAvailable ? "(available)" : ""}</option>)}</select><button disabled={busy || !assignment[order.id]} className={button} onClick={() => void act(() => assignRider(token, order.id, Number(assignment[order.id])), "Rider assign হয়েছে।")}>Assign</button></div>)}</section>
+    </div>;
+}

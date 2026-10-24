@@ -96,7 +96,7 @@ export default function AdminPanelView() {
     ] as const;
 
     return <div className="space-y-7">
-        <section className={`${card} flex flex-wrap items-center justify-between gap-3`}><div><p className="text-sm text-muted-foreground">Administration</p><h2 className="mt-1 text-2xl font-bold">Admin Panel</h2></div><button className={button} onClick={() => void refresh()}>রিফ্রেশ</button></section>
+        <section className={`${card} flex flex-wrap items-center justify-between gap-3`}><div><p className="text-sm text-muted-foreground">Administration</p><h2 className="mt-1 text-2xl font-bold">Admin Panel</h2></div><div className="flex gap-2"><Link className={button} href="/admin/delivery">ডেলিভারি ও Rider</Link><button className={button} onClick={() => void refresh()}>রিফ্রেশ</button></div></section>
         <section aria-label="Admin overview" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{summary.map(([label, value]) => <article key={label} className={card}><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></article>)}</section>
         <nav aria-label="Admin panel sections" className="flex flex-wrap gap-2">{[["#sellers", "Sellers"], ["#users", "Users"], ["#categories", "Categories"], ["#products", "Products"], ["#orders", "Orders"]].map(([href, label]) => <a key={href} href={href} className="rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold hover:border-primary">{label}</a>)}</nav>
         {error && <p role="alert" className="text-sm text-error">{error}</p>}

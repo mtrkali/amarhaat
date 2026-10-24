@@ -15,6 +15,7 @@ import { getCategories, type Category } from "../../lib/catalog";
 import { clearToken } from "../../lib/auth-storage";
 import { selectAuthStatus, selectAuthToken, selectAuthUser, sessionEnded } from "../../lib/features/authSlice";
 import { useAppDispatch, useAppSelector } from "../../lib/hooks";
+import { setProductDeliveryMethods, type DeliveryMethod } from "../../lib/delivery";
 
 const card = "rounded-2xl border border-border bg-card p-5";
 const button = "inline-flex min-h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60";
@@ -210,7 +211,7 @@ export default function SellerDashboardView() {
                         <div className="hidden grid-cols-[minmax(0,1fr)_7rem_9rem_8rem] gap-4 border-b border-border px-5 py-3 text-xs font-semibold text-muted-foreground md:grid"><span>পণ্য</span><span>দাম</span><span>স্টক</span><span>অবস্থা</span></div>
                         <ul className="divide-y divide-border">{dashboard.products.map((product) => (
                             <li key={product.id} className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_7rem_9rem_8rem] md:items-center md:px-5">
-                                <div><p className="font-semibold">{product.name}</p><p className="text-xs text-muted-foreground">/{product.slug}</p></div>
+                                <div><p className="font-semibold">{product.name}</p><p className="text-xs text-muted-foreground">/{product.slug}</p><div className="mt-2 flex flex-wrap gap-2">{(["PLATFORM_RIDER", "SELLER", "PICKUP"] as DeliveryMethod[]).map((method) => <label key={method} className="flex items-center gap-1 text-xs"><input type="checkbox" checked={product.deliveryMethods?.includes(method) ?? method === "SELLER"} onChange={async (event) => { if (!token) return; const next = new Set(product.deliveryMethods ?? ["SELLER"]); event.target.checked ? next.add(method) : next.delete(method); if (next.size === 0) { setNotice("অন্তত একটি ডেলিভারি পদ্ধতি রাখুন।"); return; } try { await setProductDeliveryMethods(token, product.id, [...next]); await refresh(); setNotice("পণ্যের ডেলিভারি পদ্ধতি সেভ হয়েছে。"); } catch { setNotice("ডেলিভারি পদ্ধতি সেভ হয়নি।"); } }} />{method === "PLATFORM_RIDER" ? "Platform rider" : method === "SELLER" ? "Seller delivery" : "Pickup"}</label>)}</div></div>
                                 <p className="text-sm text-muted-foreground md:text-foreground">দাম: {money(product.price)}</p>
                                 <form onSubmit={(event) => void saveStock(event, product.id)} className="flex gap-2">
                                     <label className="sr-only" htmlFor={`stock-${product.id}`}>স্টক: {product.name}</label>

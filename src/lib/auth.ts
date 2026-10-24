@@ -33,6 +33,7 @@ export type SellerDashboardProduct = {
     stock: number;
     isActive: boolean;
     updatedAt: string;
+    deliveryMethods: ("PLATFORM_RIDER" | "SELLER" | "PICKUP")[];
 };
 
 export type SellerDashboardOrder = {

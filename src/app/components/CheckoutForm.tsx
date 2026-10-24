@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronDown, ShoppingBag } from "lucide-react";
 import {
     DEPENDENT_FIELDS,
@@ -32,6 +32,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../../lib/hooks";
 import { saveLastOrder } from "../../lib/last-order";
 import { placeOrder } from "../../lib/orders";
+import { fetchProductOptions, type DeliveryMethod, type MethodSetting } from "../../lib/delivery";
 
 function controlClass(hasError: boolean) {
     return `w-full rounded-xl border bg-input px-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:ring-2 ${hasError
@@ -158,12 +159,13 @@ export default function CheckoutForm() {
 
     // Sold-out products stay in the cart page but are never ordered.
     const lines = allLines.filter((line) => line.available);
-    const sellerGroups = lines.reduce<Array<{ key: string; name: string; subtotal: number; lines: typeof lines }>>((groups, line) => {
+    const sellerGroups = lines.reduce<Array<{ key: string; sellerId: number | null; name: string; subtotal: number; lines: typeof lines }>>((groups, line) => {
         const key = line.product.sellerId === null ? "marketplace" : `seller-${line.product.sellerId}`;
         let group = groups.find((entry) => entry.key === key);
         if (!group) {
             group = {
                 key,
+                sellerId: line.product.sellerId,
                 name: line.product.sellerName ?? "Amar Haat",
                 subtotal: 0,
                 lines: [],
@@ -179,6 +181,28 @@ export default function CheckoutForm() {
     const [errors, setErrors] = useState<CheckoutErrors>({});
     const [submitting, setSubmitting] = useState(false);
     const [formMessage, setFormMessage] = useState<string | null>(null);
+    const [methodSettings, setMethodSettings] = useState<MethodSetting[]>([]);
+    const [sellerMethods, setSellerMethods] = useState<Record<string, DeliveryMethod[]>>({});
+    const [deliveryChoices, setDeliveryChoices] = useState<Record<string, DeliveryMethod>>({});
+    const [loadingMethods, setLoadingMethods] = useState(true);
+
+    useEffect(() => {
+        let active = true;
+        if (lines.length === 0) { setLoadingMethods(false); return; }
+        setLoadingMethods(true);
+        void fetchProductOptions(lines.map((line) => line.product.id)).then((response) => {
+            if (!active) return;
+            setMethodSettings(response.methods);
+            const allowed: Record<string, DeliveryMethod[]> = {};
+            for (const group of sellerGroups) {
+                const productMethods = group.lines.map((line) => response.products.find((product) => product.slug === line.product.id)?.deliveryMethods ?? ["SELLER"]);
+                allowed[group.key] = response.methods.map((setting) => setting.method).filter((method) => productMethods.every((methods) => methods.includes(method)));
+            }
+            setSellerMethods(allowed);
+            setDeliveryChoices((old) => Object.fromEntries(sellerGroups.map((group) => [group.key, allowed[group.key]?.includes(old[group.key]) ? old[group.key] : allowed[group.key]?.[0]]).filter((entry) => Boolean(entry[1]))) as Record<string, DeliveryMethod>);
+        }).catch(() => { if (active) setFormMessage("ডেলিভারি পদ্ধতি লোড করা যায়নি। আবার চেষ্টা করুন।"); }).finally(() => { if (active) setLoadingMethods(false); });
+        return () => { active = false; };
+    }, [lines.map((line) => line.product.id).join(","), sellerGroups.map((group) => group.key).join(",")]);
 
     // The lists in the union and ward drop-downs depend on the choices above them.
     const areas = getAreas(values.upazila);
@@ -232,6 +256,11 @@ export default function CheckoutForm() {
             return;
         }
 
+        if (loadingMethods || sellerGroups.some((group) => !deliveryChoices[group.key])) {
+            setFormMessage("প্রতিটি বিক্রেতার জন্য ডেলিভারি পদ্ধতি বেছে নিন।");
+            return;
+        }
+
         setSubmitting(true);
 
         const outcome = await placeOrder({
@@ -240,6 +269,7 @@ export default function CheckoutForm() {
                 productId: line.product.id,
                 quantity: line.quantity,
             })),
+            deliveryChoices: sellerGroups.map((group) => ({ sellerId: group.sellerId, method: deliveryChoices[group.key] })),
         });
 
         setSubmitting(false);
@@ -366,6 +396,12 @@ export default function CheckoutForm() {
                                 <h3 className="text-sm font-semibold text-foreground">{group.name}</h3>
                                 <span className="text-xs text-muted-foreground">আলাদা বিক্রেতা অর্ডার</span>
                             </div>
+                            <label className="mb-3 block text-xs font-medium text-muted-foreground">ডেলিভারি পদ্ধতি
+                                <select aria-label={`${group.name} delivery method`} disabled={loadingMethods || !sellerMethods[group.key]?.length} value={deliveryChoices[group.key] ?? ""} onChange={(event) => setDeliveryChoices((current) => ({ ...current, [group.key]: event.target.value as DeliveryMethod }))} className="mt-1 h-10 w-full rounded-lg border border-border bg-input px-3 text-sm text-foreground">
+                                    {loadingMethods && <option value="">লোড হচ্ছে…</option>}
+                                    {(sellerMethods[group.key] ?? []).map((method) => <option value={method} key={method}>{method === "PLATFORM_RIDER" ? "Amar Haat rider" : method === "SELLER" ? "Seller delivery" : "Pickup"} · ৳{methodSettings.find((setting) => setting.method === method)?.fee ?? 0}</option>)}
+                                </select>
+                            </label>
                             <ul className="space-y-3">
                     {group.lines.map(({ product, quantity, lineTotal }) => (
                         <li key={product.id} className="flex items-center gap-3">
@@ -425,13 +461,13 @@ export default function CheckoutForm() {
                     </div>
                 </dl>
 
-                {/* TODO: add the delivery fee here once the delivery rules are decided. */}
+                {(() => { const fee = sellerGroups.reduce((sum, group) => sum + (methodSettings.find((setting) => setting.method === deliveryChoices[group.key])?.fee ?? 0), 0); return <><div className="mt-4 flex justify-between border-t border-border pt-3 text-sm"><span className="text-muted-foreground">ডেলিভারি ফি</span><span>৳{fee}</span></div>
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
                     <span className="font-semibold text-foreground">মোট</span>
                     <span className="text-xl font-bold text-foreground">
-                        ৳{subtotal}
+                        ৳{subtotal + fee}
                     </span>
-                </div>
+                </div></>; })()}
             </aside>
 
             <form
