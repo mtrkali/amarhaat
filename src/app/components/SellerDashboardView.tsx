@@ -186,7 +186,13 @@ export default function SellerDashboardView() {
                 <h2 id="seller-overview-heading" className="text-xl font-bold">ওভারভিউ</h2>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {overviewCards.map(([label, value]) => <article key={label} className={card}><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></article>)}
-                    <article className={card}><p className="text-sm text-muted-foreground">ডেলিভারি হওয়া পণ্যের বিক্রয়</p><p className="mt-2 text-3xl font-bold">{money(dashboard.overview.deliveredSales)}</p><p className="mt-1 text-xs text-muted-foreground">এটি gross subtotal; commission/settlement ধাপ ৭-এ আসবে।</p></article>
+                    <article className={card}><p className="text-sm text-muted-foreground">ডেলিভারি হওয়া পণ্যের বিক্রয়</p><p className="mt-2 text-2xl font-bold">{money(dashboard.financialSummary.deliveredSales)}</p></article>
+                    <article className={card}><p className="text-sm text-muted-foreground">আদায় হওয়া COD</p><p className="mt-2 text-2xl font-bold">{money(dashboard.financialSummary.collectedCod)}</p></article>
+                    <article className={card}><p className="text-sm text-muted-foreground">বাকি COD</p><p className="mt-2 text-2xl font-bold">{money(dashboard.financialSummary.pendingCod)}</p></article>
+                    <article className={card}><p className="text-sm text-muted-foreground">Earned commission</p><p className="mt-2 text-2xl font-bold">{money(dashboard.financialSummary.commissionEarned)}</p></article>
+                    <article className={card}><p className="text-sm text-muted-foreground">Pending commission</p><p className="mt-2 text-2xl font-bold">{money(dashboard.financialSummary.commissionPending)}</p></article>
+                    <article className={card}><p className="text-sm text-muted-foreground">Settled commission</p><p className="mt-2 text-2xl font-bold">{money(dashboard.financialSummary.commissionSettled)}</p></article>
+                    <article className={card}><p className="text-sm text-muted-foreground">Seller net (delivery fee বাদে)</p><p className="mt-2 text-2xl font-bold">{money(dashboard.financialSummary.sellerNetBeforeDeliveryFee)}</p></article>
                 </div>
             </section>
 

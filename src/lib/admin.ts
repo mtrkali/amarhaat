@@ -1,7 +1,7 @@
 import { apiFetch } from "./api";
 import type { AuthUser } from "./auth";
 
-export type AdminSeller = { id: number; userId: number; slug: string; shopName: string; status: "PENDING" | "APPROVED" | "SUSPENDED"; };
+export type AdminSeller = { id: number; userId: number; slug: string; shopName: string; status: "PENDING" | "APPROVED" | "SUSPENDED"; commissionBps: number | null; };
 export type AdminCategory = { id: number; slug: string; name: string; imageUrl: string | null; description: string | null; parentId: number | null; sortOrder: number; isActive: boolean; };
 export type AdminProduct = { id: number; slug: string; name: string; price: number; stock: number; isActive: boolean; sellerId: number | null; categorySlug: string | null; };
 export type AdminOrder = { id: number; orderNumber: string; sellerId: number | null; customerName: string; customerPhone: string; total: number; status: string; createdAt: string; };
@@ -24,6 +24,10 @@ export async function fetchAdminData(token: string): Promise<AdminData> {
 
 export function setSellerStatus(token: string, id: number, status: AdminSeller["status"]) {
     return apiFetch(`/sellers/${id}/status`, { ...auth(token), method: "PATCH", body: JSON.stringify({ status }) });
+}
+
+export function setSellerCommission(token: string, id: number, commissionBps: number | null) {
+    return apiFetch(`/sellers/${id}/commission`, { ...auth(token), method: "PATCH", body: JSON.stringify({ commissionBps }) });
 }
 
 export function setUserStatus(token: string, id: number, status: "ACTIVE" | "INACTIVE" | "SUSPENDED") {

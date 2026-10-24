@@ -63,6 +63,17 @@ export type SellerDashboard = {
     };
     products: SellerDashboardProduct[];
     orders: SellerDashboardOrder[];
+    financialSummary: {
+        deliveredSales: number;
+        deliveredDeliveryFees: number;
+        collectedCod: number;
+        pendingCod: number;
+        commissionPending: number;
+        commissionEarned: number;
+        commissionSettled: number;
+        commissionReversed: number;
+        sellerNetBeforeDeliveryFee: number;
+    };
 };
 
 type DataResponse<T> = { success: boolean; data: T };

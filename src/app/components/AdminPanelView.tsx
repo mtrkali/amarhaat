@@ -7,7 +7,7 @@ import { clearToken } from "../../lib/auth-storage";
 import { selectAuthStatus, selectAuthToken, selectAuthUser, sessionEnded } from "../../lib/features/authSlice";
 import { useAppDispatch, useAppSelector } from "../../lib/hooks";
 import {
-    fetchAdminData, saveCategory, setOrderStatus, setSellerStatus, setUserStatus, updateAdminProduct,
+    fetchAdminData, saveCategory, setOrderStatus, setSellerCommission, setSellerStatus, setUserStatus, updateAdminProduct,
     type AdminData, type AdminProduct, type CategoryInput,
 } from "../../lib/admin";
 import { describeError, isSessionError } from "../../lib/auth";
@@ -32,6 +32,7 @@ export default function AdminPanelView() {
     const [productDrafts, setProductDrafts] = useState<Record<number, { price: string; stock: string; isActive: boolean }>>({});
     const [category, setCategory] = useState({ slug: "", name: "", imageUrl: "", description: "", sortOrder: "0" });
     const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { name: string; sortOrder: string }>>({});
+    const [commissionDrafts, setCommissionDrafts] = useState<Record<number, string>>({});
 
     const endSession = useCallback(() => { clearToken(); dispatch(sessionEnded()); }, [dispatch]);
     const refresh = useCallback(async () => {
@@ -40,6 +41,7 @@ export default function AdminPanelView() {
         try {
             const result = await fetchAdminData(token);
             setData(result);
+            setCommissionDrafts(Object.fromEntries(result.sellers.map((seller) => [seller.id, seller.commissionBps === null ? "" : String(seller.commissionBps / 100)])));
             setCategoryDrafts(Object.fromEntries(result.categories.map((item) => [item.id, { name: item.name, sortOrder: String(item.sortOrder) }])));
             setProductDrafts(Object.fromEntries(result.products.map((p) => [p.id, { price: String(p.price), stock: String(p.stock), isActive: p.isActive }])));
         } catch (caught) {
@@ -84,6 +86,14 @@ export default function AdminPanelView() {
         await mutate(`product-${product.id}`, () => updateAdminProduct(token, product.id, { price, stock, isActive: draft.isActive }), "পণ্য আপডেট হয়েছে।");
     }
 
+    async function saveCommission(sellerId: number) {
+        if (!token) return;
+        const raw = commissionDrafts[sellerId]?.trim() ?? "";
+        const rateBps = raw === "" ? null : Number(raw) * 100;
+        if (rateBps !== null && (!Number.isInteger(rateBps) || rateBps < 0 || rateBps > 10000)) { setNotice("Commission ০–১০০% হতে হবে এবং সর্বোচ্চ ২ দশমিক ঘর দিন।"); return; }
+        await mutate(`commission-${sellerId}`, () => setSellerCommission(token, sellerId, rateBps), raw === "" ? "Seller-এর commission default rate-এ ফিরেছে।" : "Seller commission rate সেভ হয়েছে।");
+    }
+
     if (authStatus === "loading" || loading) return <p role="status" className={`${card} text-center text-muted-foreground`}>Admin panel লোড হচ্ছে…</p>;
     if (authStatus !== "authenticated" || !token) return <div className={`${card} text-center`}><p>Admin panel দেখতে লগইন করুন।</p><Link className={`${button} mt-4`} href="/login?next=%2Fadmin">লগইন</Link></div>;
     if (user?.role !== "ADMIN") return <div className={`${card} text-center`}><p className="font-semibold">এই প্যানেল শুধু admin ব্যবহার করতে পারেন।</p></div>;
@@ -96,14 +106,14 @@ export default function AdminPanelView() {
     ] as const;
 
     return <div className="space-y-7">
-        <section className={`${card} flex flex-wrap items-center justify-between gap-3`}><div><p className="text-sm text-muted-foreground">Administration</p><h2 className="mt-1 text-2xl font-bold">Admin Panel</h2></div><div className="flex gap-2"><Link className={button} href="/admin/delivery">ডেলিভারি ও Rider</Link><button className={button} onClick={() => void refresh()}>রিফ্রেশ</button></div></section>
+        <section className={`${card} flex flex-wrap items-center justify-between gap-3`}><div><p className="text-sm text-muted-foreground">Administration</p><h2 className="mt-1 text-2xl font-bold">Admin Panel</h2></div><div className="flex flex-wrap gap-2"><Link className={button} href="/admin/delivery">ডেলিভারি ও Rider</Link><Link className={button} href="/admin/finance">Finance</Link><button className={button} onClick={() => void refresh()}>রিফ্রেশ</button></div></section>
         <section aria-label="Admin overview" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{summary.map(([label, value]) => <article key={label} className={card}><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></article>)}</section>
         <nav aria-label="Admin panel sections" className="flex flex-wrap gap-2">{[["#sellers", "Sellers"], ["#users", "Users"], ["#categories", "Categories"], ["#products", "Products"], ["#orders", "Orders"]].map(([href, label]) => <a key={href} href={href} className="rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold hover:border-primary">{label}</a>)}</nav>
         {error && <p role="alert" className="text-sm text-error">{error}</p>}
         {notice && <p role="status" className="text-sm font-medium text-primary">{notice}</p>}
 
         <section id="sellers" className="space-y-3 scroll-mt-28"><h2 className="text-xl font-bold">Seller approval</h2>
-            {data.sellers.map((seller) => <article key={seller.id} className={`${card} flex flex-wrap items-center justify-between gap-4`}><div><p className="font-semibold">{seller.shopName}</p><p className="text-xs text-muted-foreground">{seller.slug} · seller #{seller.id} · user #{seller.userId}</p><p className="mt-1 text-sm">Status: {seller.status}</p></div><div className="flex flex-wrap gap-2">{(["APPROVED", "PENDING", "SUSPENDED"] as const).map((status) => <button key={status} disabled={busyKey === `seller-${seller.id}` || seller.status === status} onClick={() => token && void mutate(`seller-${seller.id}`, () => setSellerStatus(token, seller.id, status), `Seller status ${status} করা হয়েছে।`)} className={`${button} ${status === "SUSPENDED" ? "bg-error" : ""}`}>{status === "APPROVED" ? "অনুমোদন" : status === "SUSPENDED" ? "স্থগিত" : "Pending"}</button>)}</div></article>)}
+            {data.sellers.map((seller) => <article key={seller.id} className={`${card} flex flex-wrap items-center justify-between gap-4`}><div><p className="font-semibold">{seller.shopName}</p><p className="text-xs text-muted-foreground">{seller.slug} · seller #{seller.id} · user #{seller.userId}</p><p className="mt-1 text-sm">Status: {seller.status}</p></div><div className="flex flex-wrap items-end gap-2"><label className="text-xs text-muted-foreground">Commission (%)<input aria-label={`${seller.shopName} commission percent`} type="number" min="0" max="100" step="0.01" placeholder="ডিফল্ট" value={commissionDrafts[seller.id] ?? ""} onChange={(event) => setCommissionDrafts((current) => ({ ...current, [seller.id]: event.target.value }))} className={`${input} mt-1 w-28`} /></label><button className={button} disabled={busyKey === `commission-${seller.id}`} onClick={() => void saveCommission(seller.id)}>Commission সেভ</button>{(["APPROVED", "PENDING", "SUSPENDED"] as const).map((status) => <button key={status} disabled={busyKey === `seller-${seller.id}` || seller.status === status} onClick={() => token && void mutate(`seller-${seller.id}`, () => setSellerStatus(token, seller.id, status), `Seller status ${status} করা হয়েছে।`)} className={`${button} ${status === "SUSPENDED" ? "bg-error" : ""}`}>{status === "APPROVED" ? "অনুমোদন" : status === "SUSPENDED" ? "স্থগিত" : "Pending"}</button>)}</div></article>)}
             {data.sellers.length === 0 && <div className={card}><p className="text-sm text-muted-foreground">কোনো seller application নেই।</p></div>}
         </section>
 
