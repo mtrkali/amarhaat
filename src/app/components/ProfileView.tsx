@@ -26,6 +26,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../../lib/hooks";
 import { ORDER_STEPS, type PlacedOrder } from "../../lib/orders";
 import AuthField from "./AuthField";
+import AddressBook from "./AddressBook";
 
 const cardClass = "rounded-2xl border border-border bg-card p-5";
 const primaryButton =
@@ -445,6 +446,7 @@ export default function ProfileView() {
         <div className="space-y-4">
             <ProfileDetails user={user} token={token} onExpired={handleExpired} />
             <MyOrders token={token} onExpired={handleExpired} />
+            <AddressBook token={token} />
             <ShopCard token={token} onExpired={handleExpired} />
 
             <button type="button" onClick={handleLogout} className={outlineButton}>

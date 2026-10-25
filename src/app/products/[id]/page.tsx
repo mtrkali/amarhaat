@@ -15,6 +15,7 @@ import LoadError from "../../components/LoadError";
 import PageHeading from "../../components/PageHeading";
 import ProductGrid from "../../components/ProductGrid";
 import SectionHeader from "../../components/SectionHeader";
+import ProductReviews from "../../components/ProductReviews";
 
 type ProductPageProps = {
     params: Promise<{ id: string }>;
@@ -187,6 +188,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         stock={product.stock}
                     />
 
+                    {product.sellerId !== null && product.sellerName && <Link href={`/sellers/shop-${product.sellerId}`} className="text-sm font-semibold text-primary underline">{product.sellerName} এর দোকান দেখুন</Link>}
+
                     <ul className="space-y-3 rounded-2xl border border-border bg-card p-4">
                         {perks.map(({ Icon, text }) => (
                             <li
@@ -220,6 +223,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     </section>
                 )
             }
+
+            <ProductReviews slug={product.id} />
         </main >
     );
 }

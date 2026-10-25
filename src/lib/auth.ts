@@ -78,6 +78,22 @@ export type SellerDashboard = {
 
 type DataResponse<T> = { success: boolean; data: T };
 
+export type SavedAddress = { id: number; label: string | null; name: string; phone: string; upazila: string; union: string; ward: number | null; address: string; note: string | null; isDefault: boolean };
+export type SavedAddressInput = Omit<SavedAddress, "id">;
+
+export async function fetchSavedAddresses(token: string): Promise<SavedAddress[]> {
+    return (await apiFetch<DataResponse<SavedAddress[]>>("/users/me/addresses", withToken(token))).data;
+}
+export async function saveAddress(token: string, input: SavedAddressInput, id?: number): Promise<SavedAddress> {
+    return (await apiFetch<DataResponse<SavedAddress>>(id ? `/users/me/addresses/${id}` : "/users/me/addresses", withToken(token, { method: id ? "PUT" : "POST", body: JSON.stringify(input) }))).data;
+}
+export async function deleteAddress(token: string, id: number): Promise<void> {
+    await apiFetch(`/users/me/addresses/${id}`, withToken(token, { method: "DELETE" }));
+}
+export async function setDefaultAddress(token: string, id: number): Promise<SavedAddress> {
+    return (await apiFetch<DataResponse<SavedAddress>>(`/users/me/addresses/${id}/default`, withToken(token, { method: "PATCH", body: JSON.stringify({}) }))).data;
+}
+
 // The backend also sends fields the site does not need, so keep only these.
 function pickUser(user: AuthUser): AuthUser {
     return {
